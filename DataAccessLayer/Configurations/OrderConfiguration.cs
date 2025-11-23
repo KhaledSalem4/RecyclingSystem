@@ -14,7 +14,12 @@ namespace DataAccessLayer.Configurations
         {
             builder.HasKey(o => o.ID);
             builder.Property(o => o.OrderDate).IsRequired();
-            builder.Property(o => o.Status).IsRequired().HasMaxLength(50);
+            
+            // Configure Status as enum stored as string in database
+            builder.Property(o => o.Status)
+                   .IsRequired()
+                   .HasConversion<string>()
+                   .HasMaxLength(20);
 
             // User who placed the order
             builder.HasOne(o => o.User)

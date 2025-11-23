@@ -12,7 +12,7 @@ namespace DataAccessLayer.Repositories.Interfaces
         Task<IEnumerable<Order>> GetOrdersByUserIdAsync(string userId);
         Task<IEnumerable<Order>> GetOrdersByCollectorIdAsync(string collectorId);
         Task<IEnumerable<Order>> GetOrdersByFactoryIdAsync(int factoryId);
-        Task<IEnumerable<Order>> GetOrdersByStatusAsync(string status);
+        Task<IEnumerable<Order>> GetOrdersByStatusAsync(OrderStatus status);
         Task<Order?> GetOrderWithDetailsAsync(int orderId);
     }
 }

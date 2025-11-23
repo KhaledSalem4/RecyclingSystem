@@ -1,4 +1,4 @@
-﻿using System;
+﻿                using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +11,7 @@ namespace DataAccessLayer.Entities
         public int ID { get; set; }
         public DateOnly OrderDate { get; set; }
 
-        public string Status { get; set; } = string.Empty;
+        public OrderStatus Status { get; set; } = OrderStatus.Pending;
 
         // User who placed the order (User role)
         public string UserId { get; set; }

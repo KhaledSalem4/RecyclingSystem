@@ -49,7 +49,7 @@ namespace DataAccessLayer.Repositories.Impementations
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Order>> GetOrdersByStatusAsync(string status)
+        public async Task<IEnumerable<Order>> GetOrdersByStatusAsync(OrderStatus status)
         {
             return await _dbSet
                 .Include(o => o.User)

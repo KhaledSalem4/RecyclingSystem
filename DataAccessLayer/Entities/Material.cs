@@ -10,7 +10,7 @@ namespace DataAccessLayer.Entities
     {
         public int ID { get; set; }
         public string? TypeName { get; set; }
-        public string? Size { get; set; }
+        public int Size { get; set; }
         public decimal Price { get; set; }
 
         public ICollection<Order> Orders { get; set; } = new HashSet<Order>();

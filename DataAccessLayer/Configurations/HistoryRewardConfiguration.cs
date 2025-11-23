@@ -9,20 +9,23 @@ namespace RecyclingSystem.DataAccess.Configurations
     {
         public void Configure(EntityTypeBuilder<HistoryReward> builder)
         {
+            // Configure composite primary key
+            builder.HasKey(hr => new { hr.UserId, hr.RewardId });
 
-            builder.HasKey(ur => ur.ID);
-
-            builder.HasOne(ur => ur.User)
+            builder.HasOne(hr => hr.User)
                    .WithMany(u => u.HistoryRewards)
-                   .HasForeignKey(ur => ur.UserId)
+                   .HasForeignKey(hr => hr.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(ur => ur.Reward)
+            builder.HasOne(hr => hr.Reward)
                    .WithMany(r => r.HistoryReward)
-                   .HasForeignKey(ur => ur.RewardId)
+                   .HasForeignKey(hr => hr.RewardId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Property(ur => ur.PointsUsed)
+            builder.Property(hr => hr.ClaimedAt)
+                   .IsRequired();
+
+            builder.Property(hr => hr.PointsUsed)
                    .IsRequired();
         }
     }
