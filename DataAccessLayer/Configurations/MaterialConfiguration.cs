@@ -16,7 +16,7 @@ namespace DataAccessLayer.Configurations
             builder.HasKey(m => m.ID);
             
             builder.Property(m => m.TypeName).HasMaxLength(100);
-            builder.Property(m => m.Size).HasMaxLength(50);
+            builder.Property(m => m.Size).IsRequired().HasPrecision(18,2).HasMaxLength(100);
             builder.Property(m => m.Price).IsRequired().HasPrecision(18, 2);
 
             // Relationship with Factory

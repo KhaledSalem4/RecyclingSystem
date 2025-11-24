@@ -9,8 +9,8 @@ namespace DataAccessLayer.Entities
     public class Material
     {
         public int ID { get; set; }
-        public string? TypeName { get; set; }
-        public int Size { get; set; }
+        public string? TypeName { get; set; } = MaterialType.Plastic.ToString();
+        public double Size { get; set; }
         public decimal Price { get; set; }
 
         public ICollection<Order> Orders { get; set; } = new HashSet<Order>();
