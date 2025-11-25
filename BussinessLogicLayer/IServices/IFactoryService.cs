@@ -4,10 +4,14 @@ namespace BusinessLogicLayer.IServices
 {
     public interface IFactoryService
     {
-        Task<IEnumerable<FactoryDto>> GetAllAsync();
-        Task<FactoryDto?> GetByIdAsync(int id);
-        Task AddAsync(FactoryDto dto);
-        Task UpdateAsync(FactoryDto dto);
-        Task DeleteAsync(int id);
+        // Basic CRUD
+        Task<IEnumerable<FactoryDto>> GetAllFactoriesAsync();
+        Task<FactoryDto?> GetFactoryByIdAsync(int id);
+        Task<FactoryDto> CreateFactoryAsync(CreateFactoryDto dto);
+        Task<FactoryDto> UpdateFactoryAsync(UpdateFactoryDto dto);
+        Task<bool> DeleteFactoryAsync(int id);
+
+        // Factory with orders
+        Task<FactoryDetailsDto?> GetFactoryWithOrdersAsync(int id);
     }
 }
