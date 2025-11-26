@@ -17,6 +17,6 @@ namespace RecyclingSystem.DataAccess.Entities
 
         public int RequiredPoints { get; set; }
 
-        public ICollection<HistoryReward> HistoryReward { get; set; } = new HashSet<HistoryReward>();
+        public ICollection<HistoryReward> HistoryRewards { get; set; } = new HashSet<HistoryReward>();
     }
 }

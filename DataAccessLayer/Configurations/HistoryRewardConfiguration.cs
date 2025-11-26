@@ -12,13 +12,15 @@ namespace RecyclingSystem.DataAccess.Configurations
             // Configure composite primary key
             builder.HasKey(hr => new { hr.UserId, hr.RewardId });
 
+            // Relationship: ApplicationUser → HistoryReward (one-to-many)
             builder.HasOne(hr => hr.User)
                    .WithMany(u => u.HistoryRewards)
                    .HasForeignKey(hr => hr.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
 
+            // Relationship: Reward → HistoryReward (one-to-many)
             builder.HasOne(hr => hr.Reward)
-                   .WithMany(r => r.HistoryReward)
+                   .WithMany(r => r.HistoryRewards)
                    .HasForeignKey(hr => hr.RewardId)
                    .OnDelete(DeleteBehavior.Cascade);
 

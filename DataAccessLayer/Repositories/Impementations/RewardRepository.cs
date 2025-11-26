@@ -27,7 +27,7 @@ namespace DataAccessLayer.Repositories.Impementations
         public async Task<Reward?> GetRewardWithHistoryAsync(int rewardId)
         {
             return await _dbSet
-                .Include(r => r.HistoryReward)
+                .Include(r => r.HistoryRewards)
                     .ThenInclude(hr => hr.User)
                 .FirstOrDefaultAsync(r => r.ID == rewardId);
         }
