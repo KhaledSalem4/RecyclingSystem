@@ -19,12 +19,7 @@ namespace DataAccessLayer.Configurations
             builder.Property(m => m.Size).IsRequired().HasPrecision(18,2).HasMaxLength(100);
             builder.Property(m => m.Price).IsRequired().HasPrecision(18, 2);
 
-            // Relationship with Factory
-            builder.HasOne(m => m.Factory)
-                   .WithMany()
-                   .HasForeignKey(m => m.FactoryId)
-                   .OnDelete(DeleteBehavior.SetNull);
-
+        
             // Many-to-Many relationship with Orders
             builder.HasMany(m => m.Orders)
                    .WithMany(o => o.Materials)

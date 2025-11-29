@@ -21,8 +21,7 @@ namespace BusinessLogicLayer.Services
                 ID = entity.ID,
                 TypeName = entity.TypeName,
                 Size = entity.Size.ToString(),        // double -> string
-                Price = entity.Price,
-                FactoryId = entity.FactoryId
+                Price = entity.Price
             };
         }
 
@@ -39,8 +38,7 @@ namespace BusinessLogicLayer.Services
                 ID = dto.ID,
                 TypeName = dto.TypeName,
                 Size = sizeValue,                     // string -> double
-                Price = dto.Price,
-                FactoryId = dto.FactoryId
+                Price = dto.Price
             };
         }
 
@@ -56,7 +54,6 @@ namespace BusinessLogicLayer.Services
             entity.Size = sizeValue;
 
             entity.Price = dto.Price;
-            entity.FactoryId = dto.FactoryId;
         }
 
         // ---------- service methods ----------
@@ -107,9 +104,9 @@ namespace BusinessLogicLayer.Services
             return true;
         }
 
-        public async Task<IEnumerable<MaterialDto>> GetMaterialsByFactoryIdAsync(int factoryId)
+        public async Task<IEnumerable<MaterialDto>> GetMaterialsByTypeAsync(string typeName)
         {
-            var materials = await _unitOfWork.Materials.FindAsync(m => m.FactoryId == factoryId);
+            var materials = await _unitOfWork.Materials.GetMaterialsByTypeAsync(typeName);
             return materials.Select(m => ToDto(m));
         }
     }

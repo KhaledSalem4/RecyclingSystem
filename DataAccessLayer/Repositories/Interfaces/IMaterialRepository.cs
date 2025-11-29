@@ -9,7 +9,6 @@ namespace DataAccessLayer.Repositories.Interfaces
 {
     public interface IMaterialRepository : IGenericRepository<Material>
     {
-        Task<IEnumerable<Material>> GetMaterialsByFactoryIdAsync(int factoryId);
         Task<IEnumerable<Material>> GetMaterialsByTypeAsync(string typeName);
         Task<Material?> GetMaterialWithOrdersAsync(int materialId);
     }
