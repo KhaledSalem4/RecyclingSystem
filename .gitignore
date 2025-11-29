@@ -63,7 +63,6 @@ wwwroot//*.map
 
 # Environment / Secrets
 .env
-appsettings.json
 appsettings.Development.json
 appsettings.Local.json
 appsettings.*.local.json
