@@ -15,7 +15,6 @@ namespace DataAccessLayer.Entities
 
         public ICollection<Order> Orders { get; set; } = new HashSet<Order>();
 
-        public int? FactoryId { get; set; }
-        public Factory? Factory { get; set; }
+
     }
 }

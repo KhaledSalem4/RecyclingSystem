@@ -16,29 +16,19 @@ namespace DataAccessLayer.Repositories.Impementations
         {
         }
 
-        public async Task<IEnumerable<Material>> GetMaterialsByFactoryIdAsync(int factoryId)
-        {
-            return await _dbSet
-                .Include(m => m.Factory)
-                .Where(m => m.FactoryId == factoryId)
-                .ToListAsync();
-        }
-
         public async Task<IEnumerable<Material>> GetMaterialsByTypeAsync(string typeName)
         {
             return await _dbSet
-                .Include(m => m.Factory)
                 .Where(m => m.TypeName == typeName)
                 .ToListAsync();
-        }
+        }   
 
         public async Task<Material?> GetMaterialWithOrdersAsync(int materialId)
         {
             return await _dbSet
-                .Include(m => m.Factory)
                 .Include(m => m.Orders)
+                    .ThenInclude(o => o.Factory)
                 .FirstOrDefaultAsync(m => m.ID == materialId);
         }
-
     }
 }

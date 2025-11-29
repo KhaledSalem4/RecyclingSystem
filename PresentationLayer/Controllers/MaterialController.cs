@@ -84,13 +84,13 @@ namespace PresentationLayer.Controllers
         }
 
         // ---------------------------------------------------------
-        // GET: api/material/factory/3
-        // Get materials by factoryId
+        // GET: api/material/type/Plastic
+        // Get materials by type name
         // ---------------------------------------------------------
-        [HttpGet("factory/{factoryId}")]
-        public async Task<IActionResult> GetByFactory(int factoryId)
+        [HttpGet("type/{typeName}")]
+        public async Task<IActionResult> GetByType(string typeName)
         {
-            var materials = await _materialService.GetMaterialsByFactoryIdAsync(factoryId);
+            var materials = await _materialService.GetMaterialsByTypeAsync(typeName);
             return Ok(materials);
         }
     }

@@ -6,6 +6,5 @@
         public string? TypeName { get; set; }
         public string? Size { get; set; }
         public decimal Price { get; set; }
-        public int? FactoryId { get; set; }
     }
 }
