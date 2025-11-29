@@ -13,10 +13,12 @@ namespace DataAccessLayer.UnitOfWork
         IMaterialRepository Materials { get; }
         IFactoryRepository Factories { get; }
         IRewardRepository Rewards { get; }
-        
+        //object MaterialRepository { get; }
+
         Task<int> SaveChangesAsync();
         Task BeginTransactionAsync();
         Task CommitTransactionAsync();
         Task RollbackTransactionAsync();
+       
     }
 }
