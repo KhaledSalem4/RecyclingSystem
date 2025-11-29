@@ -49,11 +49,6 @@ packages/
 *.nupkg
 *.snupkg
 
-# EF Core snapshots (optional)
-**/*Migrations
-# DO NOT ignore full Migrations folder
-#!Migrations/
-
 # Publish output
 publish/
 wwwroot/dist/
