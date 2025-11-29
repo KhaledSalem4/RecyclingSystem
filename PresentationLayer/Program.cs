@@ -1,8 +1,12 @@
+using BusinessLogicLayer.IServices;
+using BusinessLogicLayer.Services;
+using BusinessLogicLayer.Mappers;
 using DataAccessLayer.Context;
 using DataAccessLayer.Entities;
 using DataAccessLayer.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 namespace RecyclingSystem
 {
@@ -42,6 +46,12 @@ namespace RecyclingSystem
             // Register Unit of Work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+            // Register Business Services
+            builder.Services.AddScoped<IFactoryService, FactoryService>();
+
+            // Register AutoMapper
+            builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+
             // Configure Authentication
             builder.Services.AddAuthentication();
             builder.Services.AddAuthorization(options =>
@@ -54,21 +64,39 @@ namespace RecyclingSystem
 
             builder.Services.AddControllers();
             
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
+            // Add Swagger/OpenAPI Documentation
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                // Enable Swagger UI
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Recycling System API v1");
+                    options.RoutePrefix = "swagger";
+                });
+                
+                // Enable Scalar UI (uses Swagger document)
+                app.MapScalarApiReference(options =>
+                {
+                    options.WithTitle("Recycling System API")
+                           .WithTheme(ScalarTheme.Moon)
+                           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+                });
             }
 
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // Redirect root URL to Swagger documentation
+            app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
             app.MapControllers();
 
