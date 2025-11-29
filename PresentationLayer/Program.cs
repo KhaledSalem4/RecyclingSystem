@@ -19,9 +19,11 @@ namespace RecyclingSystem
             // Add services to the container.
 
             // Configure DbContext with SQL Server
+            string? conString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<RecyclingDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(conString, sql => sql.EnableRetryOnFailure()));
 
+           
             // Configure Identity with ApplicationUser and Roles
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
