@@ -39,12 +39,12 @@ namespace RecyclingSystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _authService.LoginAsync(dto);
-
-            if (!result.Succeeded)
+            var token = await _authService.LoginAndGenerateTokenAsync(dto);
+            if (token == null)
                 return Unauthorized("Invalid email or password.");
 
-            return Ok("Login successful.");
+            return Ok(new { token });
         }
+
     }
 }

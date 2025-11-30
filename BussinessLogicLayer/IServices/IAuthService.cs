@@ -7,6 +7,6 @@ namespace BusinessLogicLayer.IServices
     public interface IAuthService
     {
         Task<IdentityResult> RegisterAsync(RegisterUserDto dto, string role);
-        Task<SignInResult> LoginAsync(LoginUserDto dto);
+        Task<string> LoginAndGenerateTokenAsync(LoginUserDto dto);
     }
 }
