@@ -8,5 +8,7 @@ namespace BusinessLogicLayer.IServices
     {
         Task<IdentityResult> RegisterAsync(RegisterUserDto dto, string role);
         Task<string> LoginAndGenerateTokenAsync(LoginUserDto dto);
+        Task<IdentityResult> ConfirmEmailAsync(string email, string token);
+
     }
 }

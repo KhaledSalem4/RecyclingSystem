@@ -2,6 +2,7 @@
 using BusinessLogicLayer.IServices;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace RecyclingSystem.Controllers
 {
@@ -32,6 +33,18 @@ namespace RecyclingSystem.Controllers
 
             return Ok("User registered successfully.");
         }
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+                return BadRequest("Email and token are required.");
+            var result = await _authService.ConfirmEmailAsync(email, token);
+
+            if (!result.Succeeded)
+                return BadRequest("Invalid or expired confirmation link.");
+
+            return Ok("Email confirmed successfully.");
+        }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
@@ -41,7 +54,7 @@ namespace RecyclingSystem.Controllers
 
             var token = await _authService.LoginAndGenerateTokenAsync(dto);
             if (token == null)
-                return Unauthorized("Invalid email or password.");
+                return Unauthorized("Invalid credentials or email not confirmed.");
 
             return Ok(new { token });
         }

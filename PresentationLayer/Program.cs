@@ -1,14 +1,16 @@
 using BusinessLogicLayer.IServices;
-using BusinessLogicLayer.Services;
 using BusinessLogicLayer.Mappers;
+using BusinessLogicLayer.Services;
+using BussinessLogicLayer.IServices;
+using BussinessLogicLayer.Services;
 using DataAccessLayer.Context;
 using DataAccessLayer.Entities;
 using DataAccessLayer.UnitOfWork;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Scalar.AspNetCore;
 using System.Text;
 
 namespace RecyclingSystem
@@ -42,6 +44,7 @@ namespace RecyclingSystem
 
                 // User settings
                 options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedEmail = true;
             })
             .AddEntityFrameworkStores<RecyclingDbContext>()
             .AddDefaultTokenProviders();
@@ -55,6 +58,7 @@ namespace RecyclingSystem
             // Register Business Services
             builder.Services.AddScoped<IFactoryService, FactoryService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
             // Register AutoMapper
             builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
