@@ -1,4 +1,4 @@
-OrderController.csusing BusinessLogicLayer.DTOs;
+using BusinessLogicLayer.DTOs;
 using BusinessLogicLayer.IServices;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,16 +10,11 @@ namespace PresentationLayer.Controllers
     {
         private readonly IOrderService _orderService;
 
-        // Constructor Dependency Injection
         public OrderController(IOrderService orderService)
         {
             _orderService = orderService;
         }
 
-        // ---------------------------------------------------------
-        // GET: api/order
-        // Get All orders
-        // ---------------------------------------------------------
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -27,10 +22,6 @@ namespace PresentationLayer.Controllers
             return Ok(orders);
         }
 
-        // ---------------------------------------------------------
-        // GET: api/order/5
-        // Get order by ID
-        // ---------------------------------------------------------
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -40,10 +31,6 @@ namespace PresentationLayer.Controllers
             return Ok(order);
         }
 
-        // ---------------------------------------------------------
-        // GET: api/order/user/{userId}
-        // Get orders by user ID
-        // ---------------------------------------------------------
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetByUserId(string userId)
         {
@@ -51,10 +38,6 @@ namespace PresentationLayer.Controllers
             return Ok(orders);
         }
 
-        // ---------------------------------------------------------
-        // GET: api/order/collector/{collectorId}
-        // Get orders by collector ID
-        // ---------------------------------------------------------
         [HttpGet("collector/{collectorId}")]
         public async Task<IActionResult> GetByCollectorId(string collectorId)
         {
@@ -62,10 +45,6 @@ namespace PresentationLayer.Controllers
             return Ok(orders);
         }
 
-        // ---------------------------------------------------------
-        // GET: api/order/factory/{factoryId}
-        // Get orders by factory ID
-        // ---------------------------------------------------------
         [HttpGet("factory/{factoryId}")]
         public async Task<IActionResult> GetByFactoryId(int factoryId)
         {
@@ -73,10 +52,6 @@ namespace PresentationLayer.Controllers
             return Ok(orders);
         }
 
-        // ---------------------------------------------------------
-        // GET: api/order/status/{status}
-        // Get orders by status (Pending, InProgress, Completed, Cancelled)
-        // ---------------------------------------------------------
         [HttpGet("status/{status}")]
         public async Task<IActionResult> GetByStatus(string status)
         {
@@ -91,12 +66,8 @@ namespace PresentationLayer.Controllers
             }
         }
 
-        // ---------------------------------------------------------
-        // POST: api/order
-        // Create new order
-        // ---------------------------------------------------------
         [HttpPost]
-        public async Task<IActionResult> Create(CreateOrderDto dto)
+        public async Task<IActionResult> Create(OrderDto dto)
         {
             try
             {
@@ -109,16 +80,12 @@ namespace PresentationLayer.Controllers
             }
         }
 
-        // ---------------------------------------------------------
-        // PUT: api/order/{id}
-        // Update order
-        // ---------------------------------------------------------
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, OrderDto dto)
         {
             try
             {
-                dto.ID = id; // Ensure ID matches route
+                dto.ID = id;
                 await _orderService.UpdateAsync(dto);
                 return Ok("Updated Successfully");
             }
@@ -132,10 +99,6 @@ namespace PresentationLayer.Controllers
             }
         }
 
-        // ---------------------------------------------------------
-        // DELETE: api/order/{id}
-        // Delete order
-        // ---------------------------------------------------------
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
