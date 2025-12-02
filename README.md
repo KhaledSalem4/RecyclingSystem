@@ -1,4 +1,4 @@
-# ♻️ RecyclingSystem API
+# ♻️ (GreenZone) RecyclingSystem API
 
 <div align="center">
 
