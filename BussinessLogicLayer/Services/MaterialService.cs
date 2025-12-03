@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DTOs;
+﻿using BussinessLogicLayer.DTOs.Material;
 using DataAccessLayer.Entities;
 using DataAccessLayer.UnitOfWork;
 
@@ -20,24 +20,18 @@ namespace BusinessLogicLayer.Services
             {
                 ID = entity.ID,
                 TypeName = entity.TypeName,
-                Size = entity.Size.ToString(),        // double -> string
+                Size = (int?)entity.Size,        
                 Price = entity.Price
             };
         }
 
         private static Material ToEntity(MaterialDto dto)
         {
-            double sizeValue = 0;
-            if (!string.IsNullOrWhiteSpace(dto.Size))
-            {
-                double.TryParse(dto.Size, out sizeValue);
-            }
-
             return new Material
             {
                 ID = dto.ID,
                 TypeName = dto.TypeName,
-                Size = sizeValue,                     // string -> double
+                Size = dto.Size ?? 0,                     // int? -> double
                 Price = dto.Price
             };
         }
@@ -45,14 +39,7 @@ namespace BusinessLogicLayer.Services
         private static void UpdateEntityFromDto(MaterialDto dto, Material entity)
         {
             entity.TypeName = dto.TypeName;
-
-            double sizeValue = 0;
-            if (!string.IsNullOrWhiteSpace(dto.Size))
-            {
-                double.TryParse(dto.Size, out sizeValue);
-            }
-            entity.Size = sizeValue;
-
+            entity.Size = dto.Size ?? 0;                   // int? -> double
             entity.Price = dto.Price;
         }
 

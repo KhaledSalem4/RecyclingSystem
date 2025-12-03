@@ -1,5 +1,10 @@
 ﻿using AutoMapper;
-using BusinessLogicLayer.DTOs;
+using BussinessLogicLayer.DTOs.AppUser;
+using BussinessLogicLayer.DTOs.Factory;
+using BussinessLogicLayer.DTOs.HistoryReward;
+using BussinessLogicLayer.DTOs.Material;
+using BussinessLogicLayer.DTOs.Order;
+using BussinessLogicLayer.DTOs.Reward;
 using DataAccessLayer.Entities;
 using RecyclingSystem.DataAccess.Entities;
 

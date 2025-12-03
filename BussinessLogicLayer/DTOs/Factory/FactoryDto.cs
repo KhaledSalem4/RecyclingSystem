@@ -1,5 +1,4 @@
-﻿
-namespace BusinessLogicLayer.DTOs
+﻿namespace BussinessLogicLayer.DTOs.Factory
 {
     public class FactoryDto
     {

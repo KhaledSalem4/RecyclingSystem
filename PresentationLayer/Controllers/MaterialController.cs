@@ -1,5 +1,5 @@
-﻿using BusinessLogicLayer.DTOs;
-using BusinessLogicLayer.Services;
+﻿using BusinessLogicLayer.Services;
+using BussinessLogicLayer.DTOs.Material;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PresentationLayer.Controllers

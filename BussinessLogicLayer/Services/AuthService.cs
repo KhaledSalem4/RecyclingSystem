@@ -1,5 +1,5 @@
-﻿using BusinessLogicLayer.DTOs;
-using BusinessLogicLayer.IServices;
+﻿using BusinessLogicLayer.IServices;
+using BussinessLogicLayer.DTOs.AppUser;
 using BussinessLogicLayer.IServices;
 using DataAccessLayer.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -119,6 +119,36 @@ namespace BusinessLogicLayer.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        public async Task<bool> SendPasswordResetLinkAsync(ForgotPasswordDto dto)
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+                return false; // don’t reveal that user doesn’t exist
+
+            // Optionally ensure email is confirmed
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+                return false;
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user); //[4][5]
+
+            var apiBaseUrl = _config["AppSettings:ApiBaseUrl"] ?? "https://localhost:44375";
+            var resetLink =
+                $"{apiBaseUrl}/api/Auth/reset-password?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
+
+            await _emailService.SendEmailAsync(
+                user.Email,
+                "Reset your password",
+                $"You can reset your password by clicking this link: {resetLink}");
+
+            return true;
+        }
+        public async Task<IdentityResult> ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+                return IdentityResult.Failed(new IdentityError { Description = "User not found." });
+                return await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword); //[6][4]
         }
     }
 }
