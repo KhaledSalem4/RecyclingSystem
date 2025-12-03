@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DTOs;
+﻿using BussinessLogicLayer.DTOs.Material;
 using DataAccessLayer.Entities;
 using DataAccessLayer.UnitOfWork;
 

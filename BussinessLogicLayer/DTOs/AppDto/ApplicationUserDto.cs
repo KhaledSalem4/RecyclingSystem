@@ -1,4 +1,4 @@
-﻿namespace BusinessLogicLayer.DTOs
+﻿namespace BussinessLogicLayer.DTOs.AppDto
 {
     public class ApplicationUserDto
     {

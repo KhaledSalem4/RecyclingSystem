@@ -1,5 +1,4 @@
-﻿using BusinessLogicLayer.DTOs;
-using BussinessLogicLayer.DTOs;
+﻿using BussinessLogicLayer.DTOs.AppDto;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 

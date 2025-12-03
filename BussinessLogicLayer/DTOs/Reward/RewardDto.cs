@@ -1,5 +1,4 @@
-﻿
-namespace BusinessLogicLayer.DTOs
+﻿namespace BussinessLogicLayer.DTOs.Reward
 {
     public class RewardDto
     {

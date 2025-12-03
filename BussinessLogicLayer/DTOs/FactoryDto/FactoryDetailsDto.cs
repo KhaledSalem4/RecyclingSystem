@@ -1,4 +1,6 @@
-namespace BusinessLogicLayer.DTOs
+using BusinessLogicLayer.DTOs;
+
+namespace BussinessLogicLayer.DTOs.FactoryDto
 {
     public class FactoryDetailsDto
     {

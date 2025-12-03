@@ -1,6 +1,5 @@
-﻿using BusinessLogicLayer.DTOs;
-using BusinessLogicLayer.IServices;
-using BussinessLogicLayer.DTOs;
+﻿using BusinessLogicLayer.IServices;
+using BussinessLogicLayer.DTOs.AppDto;
 using BussinessLogicLayer.IServices;
 using DataAccessLayer.Entities;
 using Microsoft.AspNetCore.Identity;

@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using BusinessLogicLayer.DTOs;
+using BussinessLogicLayer.DTOs.Material;
 using DataAccessLayer.Entities;
 
 

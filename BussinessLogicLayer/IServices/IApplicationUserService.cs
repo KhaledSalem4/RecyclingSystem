@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DTOs;
+﻿using BussinessLogicLayer.DTOs.AppDto;
 namespace BusinessLogicLayer.IServices;
 
     public interface IApplicationUserService

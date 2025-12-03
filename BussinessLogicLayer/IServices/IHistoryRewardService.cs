@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DTOs;
+﻿using BussinessLogicLayer.DTOs.HistoryReward;
 
 namespace BusinessLogicLayer.IServices
 {

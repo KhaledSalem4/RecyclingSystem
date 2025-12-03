@@ -1,5 +1,5 @@
-﻿using BusinessLogicLayer.DTOs;
-using BusinessLogicLayer.IServices;
+﻿using BusinessLogicLayer.IServices;
+using BussinessLogicLayer.DTOs.FactoryDto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
