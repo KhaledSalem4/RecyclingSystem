@@ -36,8 +36,13 @@ namespace RecyclingSystem.Controllers
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
         {
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
                 return BadRequest("Email and token are required.");
+
+            // Decode Token - VERY IMPORTANT
+            token = Uri.UnescapeDataString(token);
+            token = token.Replace(" ", "+");
+
             var result = await _authService.ConfirmEmailAsync(email, token);
 
             if (!result.Succeeded)
@@ -45,6 +50,7 @@ namespace RecyclingSystem.Controllers
 
             return Ok("Email confirmed successfully.");
         }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
