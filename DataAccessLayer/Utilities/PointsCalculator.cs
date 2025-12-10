@@ -9,7 +9,7 @@ namespace DataAccessLayer.Utilities
         {
             { MaterialType.Plastic, 5 },
             { MaterialType.Can, 10 },
-            { MaterialType.Paper, 8 }
+            { MaterialType.Cartoon, 8 }
         };
 
         /// <summary>
