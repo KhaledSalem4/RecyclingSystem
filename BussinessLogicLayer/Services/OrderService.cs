@@ -92,11 +92,59 @@ namespace BusinessLogicLayer.Services
             return orders.Select(o => ToDto(o));
         }
 
-        public async Task AddAsync(OrderDto dto)
+        public async Task<OrderDto> AddAsync(CreateOrderDto dto)
         {
-            var entity = ToEntity(dto);
-            await _unitOfWork.Orders.AddAsync(entity);
+            // Find user by email using the Users repository
+            var allUsers = await _unitOfWork.Users.GetAllAsync();
+            var appUser = allUsers.FirstOrDefault(u => u.Email == dto.Email);
+            if (appUser == null)
+                throw new KeyNotFoundException($"User with email {dto.Email} not found.");
+
+            // Parse material type
+            if (!Enum.TryParse<MaterialType>(dto.TypeOfMaterial, ignoreCase: true, out var materialType))
+                throw new ArgumentException($"Invalid material type: {dto.TypeOfMaterial}");
+
+            // Find or create material
+            var materials = await _unitOfWork.Materials.GetMaterialsByTypeAsync(materialType.ToString());
+            var material = materials.FirstOrDefault();
+            
+            if (material == null)
+            {
+                material = new Material
+                {
+                    TypeName = materialType.ToString(),
+                    Size = dto.Quantity,
+                    Price = 0 // Price can be set later or calculated based on business logic
+                };
+                await _unitOfWork.Materials.AddAsync(material);
+            }
+            else
+            {
+                material.Size = dto.Quantity;
+            }
+
+            // Find factory (for now, just get the first available factory - you may need better logic)
+            var factories = await _unitOfWork.Factories.GetAllAsync();
+            var factory = factories.FirstOrDefault();
+            if (factory == null)
+                throw new InvalidOperationException("No factory available.");
+
+            // Create order entity
+            var order = new Order
+            {
+                OrderDate = DateOnly.FromDateTime(DateTime.Now),
+                Status = OrderStatus.Pending,
+                UserId = appUser.Id,
+                FactoryId = factory.ID,
+                Materials = new List<Material> { material }
+            };
+
+            await _unitOfWork.Orders.AddAsync(order);
             await _unitOfWork.SaveChangesAsync();
+
+            // Return the created order as DTO
+            var createdOrder = await _unitOfWork.Orders.GetOrderWithDetailsAsync(order.ID);
+            return ToDto(createdOrder!);
         }
 
         public async Task UpdateAsync(OrderDto dto)
