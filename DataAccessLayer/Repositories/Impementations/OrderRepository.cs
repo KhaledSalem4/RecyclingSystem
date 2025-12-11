@@ -66,7 +66,7 @@ namespace DataAccessLayer.Repositories.Impementations
                 .Include(o => o.User)
                 .Include(o => o.Collector)
                 .Include(o => o.Factory)
-                .Include(o => o.Materials)
+                .Include(o => o.Materials) 
                 .FirstOrDefaultAsync(o => o.ID == orderId);
         }
     }

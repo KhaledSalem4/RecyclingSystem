@@ -9,7 +9,7 @@ namespace DataAccessLayer.Entities
     public enum MaterialType
     {
         Plastic,
-        Paper,
+        Cartoon,
         Can,
        
     }

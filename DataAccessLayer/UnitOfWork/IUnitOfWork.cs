@@ -13,7 +13,7 @@ namespace DataAccessLayer.UnitOfWork
         IMaterialRepository Materials { get; }
         IFactoryRepository Factories { get; }
         IRewardRepository Rewards { get; }
-        //object MaterialRepository { get; }
+        IApplicationUserRepository Users { get; }
 
         Task<int> SaveChangesAsync();
         Task BeginTransactionAsync();

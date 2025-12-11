@@ -10,9 +10,13 @@ namespace BusinessLogicLayer.IServices
         Task<IEnumerable<OrderDto>> GetOrdersByCollectorIdAsync(string collectorId);
         Task<IEnumerable<OrderDto>> GetOrdersByFactoryIdAsync(int factoryId);
         Task<IEnumerable<OrderDto>> GetOrdersByStatusAsync(string status);
-
-        Task AddAsync(OrderDto dto);
+        
+        Task<OrderDto> AddAsync(CreateOrderDto dto);
         Task UpdateAsync(OrderDto dto);
         Task DeleteAsync(int id);
+        
+        // Points-related methods
+        Task<bool> CompleteOrderAsync(int orderId);
+        Task<bool> CancelOrderAsync(int orderId);
     }
 }

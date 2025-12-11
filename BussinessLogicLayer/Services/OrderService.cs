@@ -2,6 +2,7 @@ using BusinessLogicLayer.IServices;
 using BussinessLogicLayer.DTOs.Order;
 using DataAccessLayer.Entities;
 using DataAccessLayer.UnitOfWork;
+using DataAccessLayer.Utilities;
 
 namespace BusinessLogicLayer.Services
 {
@@ -91,11 +92,59 @@ namespace BusinessLogicLayer.Services
             return orders.Select(o => ToDto(o));
         }
 
-        public async Task AddAsync(OrderDto dto)
+        public async Task<OrderDto> AddAsync(CreateOrderDto dto)
         {
-            var entity = ToEntity(dto);
-            await _unitOfWork.Orders.AddAsync(entity);
+            // Find user by email using the Users repository
+            var allUsers = await _unitOfWork.Users.GetAllAsync();
+            var appUser = allUsers.FirstOrDefault(u => u.Email == dto.Email);
+            if (appUser == null)
+                throw new KeyNotFoundException($"User with email {dto.Email} not found.");
+
+            // Parse material type
+            if (!Enum.TryParse<MaterialType>(dto.TypeOfMaterial, ignoreCase: true, out var materialType))
+                throw new ArgumentException($"Invalid material type: {dto.TypeOfMaterial}");
+
+            // Find or create material
+            var materials = await _unitOfWork.Materials.GetMaterialsByTypeAsync(materialType.ToString());
+            var material = materials.FirstOrDefault();
+            
+            if (material == null)
+            {
+                material = new Material
+                {
+                    TypeName = materialType.ToString(),
+                    Size = dto.Quantity,
+                    Price = 0 // Price can be set later or calculated based on business logic
+                };
+                await _unitOfWork.Materials.AddAsync(material);
+            }
+            else
+            {
+                material.Size = dto.Quantity;
+            }
+
+            // Find factory (for now, just get the first available factory - you may need better logic)
+            var factories = await _unitOfWork.Factories.GetAllAsync();
+            var factory = factories.FirstOrDefault();
+            if (factory == null)
+                throw new InvalidOperationException("No factory available.");
+
+            // Create order entity
+            var order = new Order
+            {
+                OrderDate = DateOnly.FromDateTime(DateTime.Now),
+                Status = OrderStatus.Pending,
+                UserId = appUser.Id,
+                FactoryId = factory.ID,
+                Materials = new List<Material> { material }
+            };
+
+            await _unitOfWork.Orders.AddAsync(order);
             await _unitOfWork.SaveChangesAsync();
+
+            // Return the created order as DTO
+            var createdOrder = await _unitOfWork.Orders.GetOrderWithDetailsAsync(order.ID);
+            return ToDto(createdOrder!);
         }
 
         public async Task UpdateAsync(OrderDto dto)
@@ -117,6 +166,69 @@ namespace BusinessLogicLayer.Services
 
             _unitOfWork.Orders.Remove(order);
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Completes an order and awards points to the user
+        /// </summary>
+        public async Task<bool> CompleteOrderAsync(int orderId)
+        {
+            try
+            {
+                await _unitOfWork.BeginTransactionAsync();
+
+                // Get order with materials and user
+                var order = await _unitOfWork.Orders.GetOrderWithDetailsAsync(orderId);
+                
+                if (order == null)
+                    throw new KeyNotFoundException($"Order with ID {orderId} not found.");
+
+                if (order.Status != OrderStatus.Pending)
+                    throw new InvalidOperationException("Only pending orders can be completed.");
+
+                if (order.User == null)
+                    throw new InvalidOperationException("Order has no associated user.");
+
+                // Calculate points from materials
+                int pointsEarned = PointsCalculator.CalculateOrderPoints(order);
+
+                // Award points to user
+                order.User.Points += pointsEarned;
+
+                // Update order status
+                order.Status = OrderStatus.Completed;
+
+                _unitOfWork.Orders.Update(order);
+                await _unitOfWork.CommitTransactionAsync();
+
+                return true;
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Cancels an order (no points awarded)
+        /// </summary>
+        public async Task<bool> CancelOrderAsync(int orderId)
+        {
+            var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
+            
+            if (order == null)
+                return false;
+
+            if (order.Status == OrderStatus.Completed)
+                throw new InvalidOperationException("Cannot cancel a completed order.");
+
+            order.Status = OrderStatus.Cancelled;
+            
+            _unitOfWork.Orders.Update(order);
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
         }
     }
 }

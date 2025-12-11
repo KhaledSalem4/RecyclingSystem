@@ -1,5 +1,6 @@
 using BusinessLogicLayer.IServices;
 using BussinessLogicLayer.DTOs.Order;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PresentationLayer.Controllers
@@ -67,12 +68,12 @@ namespace PresentationLayer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(OrderDto dto)
+        public async Task<IActionResult> Create(CreateOrderDto dto)
         {
             try
             {
-                await _orderService.AddAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = dto.ID }, dto);
+                var createdOrder = await _orderService.AddAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = createdOrder.ID }, createdOrder);
             }
             catch (Exception ex)
             {
@@ -115,6 +116,32 @@ namespace PresentationLayer.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Complete an order and award points to the user based on materials recycled
+        /// </summary>
+        /// <param name="id">Order ID</param>
+        /// <returns>Success message with total points awarded</returns>
+        [HttpPost("{id}/complete")]
+        [Authorize(Policy = "AdminOnly")] // Or CollectorAccess
+        public async Task<IActionResult> CompleteOrder(int id)
+        {
+            var result = await _orderService.CompleteOrderAsync(id);
+            return Ok(new { success = result, message = "Order completed and points awarded" });
+        }
+
+        /// <summary>
+        /// Cancel an order and revoke any awarded points
+        /// </summary>
+        /// <param name="id">Order ID</param>
+        /// <returns>Success message</returns>
+        [HttpPost("{id}/cancel")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> CancelOrder(int id)
+        {
+            var result = await _orderService.CancelOrderAsync(id);
+            return Ok(new { success = result, message = "Order cancelled" });
         }
     }
 }
