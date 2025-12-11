@@ -38,6 +38,12 @@ namespace BusinessLogicLayer.Mappers
 
             // ApplicationUser mappings
             CreateMap<ApplicationUser, ApplicationUserDto>().ReverseMap();
+            CreateMap<ApplicationUser, UpdateUserProfileDto>().ReverseMap();
+            CreateMap<UpdateUserDto, ApplicationUser>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Points, opt => opt.Ignore());
+
+            // Reward mappings
             CreateMap<Reward, RewardDto>().ReverseMap();
             CreateMap<Reward, CreateRewardDto>().ReverseMap();
             CreateMap<Reward, UpdateRewardDto>().ReverseMap();
