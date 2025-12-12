@@ -1,11 +1,10 @@
 ﻿using BussinessLogicLayer.DTOs.AppUser;
-using BussinessLogicLayer.DTOs.Collector;
 
 namespace BusinessLogicLayer.IServices
 {
     public interface IApplicationUserService
     {
-        // Existing methods
+        
         Task<IEnumerable<ApplicationUserDto>> GetAllAsync();
         Task<ApplicationUserDto?> GetByIdAsync(string id);
         Task UpdateAsync(ApplicationUserDto dto);
