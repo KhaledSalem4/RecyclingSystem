@@ -15,6 +15,7 @@ namespace DataAccessLayer.UnitOfWork
         public IMaterialRepository Materials { get; private set; }
         public IFactoryRepository Factories { get; private set; }
         public IRewardRepository Rewards { get; private set; }
+        public IHistoryRewardRepository HistoryRewards { get; private set; }
         public IApplicationUserRepository Users { get; private set; }
 
         public UnitOfWork(RecyclingDbContext context)
@@ -24,6 +25,7 @@ namespace DataAccessLayer.UnitOfWork
             Materials = new MaterialRepository(_context);
             Factories = new FactoryRepository(_context);
             Rewards = new RewardRepository(_context);
+            HistoryRewards = new HistoryRewardRepository(_context);
             Users = new ApplicationUserRepository(_context);
         }
 

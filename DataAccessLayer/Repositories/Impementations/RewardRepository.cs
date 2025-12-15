@@ -41,7 +41,7 @@ namespace DataAccessLayer.Repositories.Impementations
 
             return await query.OrderBy(r => r.RequiredPoints).ToListAsync();
         }
-        // Added method to get reward details along with its redemption history
+        // Added method to get reward details along with its redemption the history
         public async Task<Reward?> GetRewardWithHistoryAsync(int rewardId)
         {
             return await _dbSet
@@ -49,7 +49,8 @@ namespace DataAccessLayer.Repositories.Impementations
                     .ThenInclude(hr => hr.User)
                 .FirstOrDefaultAsync(r => r.ID == rewardId);
         }
-        // Added method to get the most popular rewards based on redemption count
+        // Added method to get the most popular rewards based on redemption the count   
+
         public async Task<IEnumerable<Reward>> GetPopularRewardsAsync(int topCount = 10)
         {
             return await _dbSet

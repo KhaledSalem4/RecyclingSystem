@@ -54,7 +54,7 @@ namespace BusinessLogicLayer.Services
             entity.FactoryId = dto.FactoryId;
         }
 
-        // ---------- service methods ----------
+        // ---------- existing service methods ----------
         public async Task<IEnumerable<OrderDto>> GetAllAsync()
         {
             var orders = await _unitOfWork.Orders.GetAllAsync();
@@ -107,14 +107,14 @@ namespace BusinessLogicLayer.Services
             // Find or create material
             var materials = await _unitOfWork.Materials.GetMaterialsByTypeAsync(materialType.ToString());
             var material = materials.FirstOrDefault();
-            
+
             if (material == null)
             {
                 material = new Material
                 {
                     TypeName = materialType.ToString(),
                     Size = dto.Quantity,
-                    Price = 0 // Price can be set later or calculated based on business logic
+                    Price = 0
                 };
                 await _unitOfWork.Materials.AddAsync(material);
             }
@@ -123,7 +123,7 @@ namespace BusinessLogicLayer.Services
                 material.Size = dto.Quantity;
             }
 
-            // Find factory (for now, just get the first available factory - you may need better logic)
+            // Find factory
             var factories = await _unitOfWork.Factories.GetAllAsync();
             var factory = factories.FirstOrDefault();
             if (factory == null)
@@ -142,7 +142,6 @@ namespace BusinessLogicLayer.Services
             await _unitOfWork.Orders.AddAsync(order);
             await _unitOfWork.SaveChangesAsync();
 
-            // Return the created order as DTO
             var createdOrder = await _unitOfWork.Orders.GetOrderWithDetailsAsync(order.ID);
             return ToDto(createdOrder!);
         }
@@ -168,23 +167,19 @@ namespace BusinessLogicLayer.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// Completes an order and awards points to the user
-        /// </summary>
         public async Task<bool> CompleteOrderAsync(int orderId)
         {
             try
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // Get order with materials and user
                 var order = await _unitOfWork.Orders.GetOrderWithDetailsAsync(orderId);
-                
+
                 if (order == null)
                     throw new KeyNotFoundException($"Order with ID {orderId} not found.");
 
-                if (order.Status != OrderStatus.Pending)
-                    throw new InvalidOperationException("Only pending orders can be completed.");
+                if (order.Status != OrderStatus.Delivered)
+                    throw new InvalidOperationException("Only delivered orders can be completed.");
 
                 if (order.User == null)
                     throw new InvalidOperationException("Order has no associated user.");
@@ -210,13 +205,10 @@ namespace BusinessLogicLayer.Services
             }
         }
 
-        /// <summary>
-        /// Cancels an order (no points awarded)
-        /// </summary>
         public async Task<bool> CancelOrderAsync(int orderId)
         {
             var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
-            
+
             if (order == null)
                 return false;
 
@@ -224,11 +216,122 @@ namespace BusinessLogicLayer.Services
                 throw new InvalidOperationException("Cannot cancel a completed order.");
 
             order.Status = OrderStatus.Cancelled;
-            
+
             _unitOfWork.Orders.Update(order);
             await _unitOfWork.SaveChangesAsync();
 
             return true;
+        }
+
+        // ---------- NEW COLLECTOR METHODS ----------
+
+        /// <summary>
+        /// Admin assigns an order to a collector
+        /// </summary>
+        public async Task<bool> AssignOrderToCollectorAsync(int orderId, string collectorId)
+        {
+            var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
+            if (order == null)
+                throw new KeyNotFoundException($"Order with ID {orderId} not found.");
+
+            if (order.Status != OrderStatus.Pending)
+                throw new InvalidOperationException("Only pending orders can be assigned.");
+
+            // Verify collector exists and has Collector role
+            var collector = await _unitOfWork.Users.GetByIdAsync(collectorId);
+            if (collector == null)
+                throw new KeyNotFoundException("Collector not found.");
+
+            order.CollectorId = collectorId;
+            order.Status = OrderStatus.Assigned;
+
+            _unitOfWork.Orders.Update(order);
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Collector accepts/picks up an available order
+        /// </summary>
+        public async Task<bool> CollectorAcceptOrderAsync(int orderId, string collectorId)
+        {
+            var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
+            if (order == null)
+                throw new KeyNotFoundException($"Order with ID {orderId} not found.");
+
+            if (order.Status != OrderStatus.Pending)
+                throw new InvalidOperationException("Only pending orders can be accepted.");
+
+            // Verify collector exists
+            var collector = await _unitOfWork.Users.GetByIdAsync(collectorId);
+            if (collector == null)
+                throw new KeyNotFoundException("Collector not found.");
+
+            order.CollectorId = collectorId;
+            order.Status = OrderStatus.Assigned;
+
+            _unitOfWork.Orders.Update(order);
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Collector updates order status (Assigned -> InProgress -> Delivered)
+        /// </summary>
+        public async Task<bool> CollectorUpdateOrderStatusAsync(int orderId, string collectorId, string newStatus)
+        {
+            var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
+            if (order == null)
+                throw new KeyNotFoundException($"Order with ID {orderId} not found.");
+
+            // Verify collector owns this order
+            if (order.CollectorId != collectorId)
+                throw new UnauthorizedAccessException("You can only update your own orders.");
+
+            // Parse new status
+            if (!Enum.TryParse<OrderStatus>(newStatus, true, out var newOrderStatus))
+                throw new ArgumentException($"Invalid status: {newStatus}");
+
+            // Validate status transitions
+            var validTransitions = new Dictionary<OrderStatus, List<OrderStatus>>
+                {
+                    { OrderStatus.Assigned, new List<OrderStatus> { OrderStatus.InProgress, OrderStatus.Cancelled } },
+                    { OrderStatus.InProgress, new List<OrderStatus> { OrderStatus.Delivered, OrderStatus.Cancelled } },
+                    { OrderStatus.Delivered, new List<OrderStatus> { OrderStatus.Completed } }
+                };
+
+            if (!validTransitions.ContainsKey(order.Status) ||
+                !validTransitions[order.Status].Contains(newOrderStatus))
+            {
+                throw new InvalidOperationException(
+                    $"Cannot transition from {order.Status} to {newOrderStatus}");
+            }
+
+            order.Status = newOrderStatus;
+            _unitOfWork.Orders.Update(order);
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Get all pending orders available for collectors to accept
+        /// </summary>
+        public async Task<IEnumerable<OrderDto>> GetAvailableOrdersForCollectorsAsync()
+        {
+            var orders = await _unitOfWork.Orders.GetOrdersByStatusAsync(OrderStatus.Pending);
+            return orders.Where(o => o.CollectorId == null).Select(o => ToDto(o));
+        }
+
+        /// <summary>
+        /// Get collector's own orders
+        /// </summary>
+        public async Task<IEnumerable<OrderDto>> GetMyOrdersAsCollectorAsync(string collectorId)
+        {
+            var orders = await _unitOfWork.Orders.GetOrdersByCollectorIdAsync(collectorId);
+            return orders.Select(o => ToDto(o));
         }
     }
 }

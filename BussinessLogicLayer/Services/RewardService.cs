@@ -127,8 +127,8 @@ namespace BusinessLogicLayer.Services
                 await _unitOfWork.BeginTransactionAsync();
 
                 // Get user with points
-                var user = await _unitOfWork.Orders.FirstOrDefaultAsync(o => o.UserId == userId);
-                if (user?.User == null)
+                var user = await _unitOfWork.Users.GetByIdAsync(userId);
+                if (user == null)
                     throw new KeyNotFoundException("User not found");
 
                 // Get reward
@@ -144,11 +144,12 @@ namespace BusinessLogicLayer.Services
                 int totalPointsNeeded = reward.RequiredPoints * dto.Quantity;
 
                 // Validate user points
-                if (user.User.Points < totalPointsNeeded)
+                if (user.Points < totalPointsNeeded)
                     throw new InvalidOperationException("Insufficient points");
 
-                // Deduct points
-                user.User.Points -= totalPointsNeeded;
+                // ✅ Deduct points from user
+                user.Points -= totalPointsNeeded;
+                _unitOfWork.Users.Update(user);
 
                 // Deduct stock
                 await _unitOfWork.Rewards.UpdateStockQuantityAsync(dto.RewardId, -dto.Quantity);
@@ -164,9 +165,7 @@ namespace BusinessLogicLayer.Services
                     Status = RedemptionStatus.Pending
                 };
 
-                await _unitOfWork.Orders.AddAsync(user); // Update user points
-                // Note: Add HistoryReward repository to UnitOfWork
-                // await _unitOfWork.HistoryRewards.AddAsync(historyReward);
+                await _unitOfWork.HistoryRewards.AddAsync(historyReward);
 
                 await _unitOfWork.CommitTransactionAsync();
                 return true;

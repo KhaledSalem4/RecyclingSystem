@@ -37,7 +37,16 @@ namespace BusinessLogicLayer.Mappers
             CreateMap<HistoryReward, HistoryRewardDto>().ReverseMap();
 
             // ApplicationUser mappings
-            CreateMap<ApplicationUser, ApplicationUserDto>().ReverseMap();
+            CreateMap<ApplicationUser, ApplicationUserDto>()
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email ?? string.Empty))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
+                .ReverseMap();
+            CreateMap<ApplicationUser, UpdateUserProfileDto>().ReverseMap();
+            CreateMap<UpdateUserDto, ApplicationUser>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Points, opt => opt.Ignore());
+
+            // Reward mappings
             CreateMap<Reward, RewardDto>().ReverseMap();
             CreateMap<Reward, CreateRewardDto>().ReverseMap();
             CreateMap<Reward, UpdateRewardDto>().ReverseMap();
