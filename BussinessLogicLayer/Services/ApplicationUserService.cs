@@ -55,8 +55,11 @@ namespace BusinessLogicLayer.Services
                 user.UserName = dto.Email;
             }
 
-            // Update phone number
-            user.PhoneNumber = dto.PhoneNumber;
+            // Update address
+            user.City = dto.City;
+            user.Street = dto.Street;
+            user.BuildingNo = dto.BuildingNo;
+            user.Apartment = dto.Apartment;
 
             _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
@@ -89,6 +92,12 @@ namespace BusinessLogicLayer.Services
                 user.PhoneNumber = dto.PhoneNumber;
             }
 
+            // Update Address
+            user.City = dto.City;
+            user.Street = dto.Street;
+            user.BuildingNo = dto.BuildingNo;
+            user.Apartment = dto.Apartment;
+
             var result = await _userManager.UpdateAsync(user);
             return result.Succeeded;
         }
@@ -105,7 +114,11 @@ namespace BusinessLogicLayer.Services
                 FullName = user.FullName,
                 Email = user.Email ?? string.Empty,
                 PhoneNumber = user.PhoneNumber,
-                Points = user.Points
+                Points = user.Points,
+                City = user.City,
+                Street = user.Street,
+                BuildingNo = user.BuildingNo,
+                Apartment = user.Apartment
             };
         }
 
@@ -124,7 +137,11 @@ namespace BusinessLogicLayer.Services
                 UserName = dto.Email,
                 PhoneNumber = dto.PhoneNumber,
                 Points = 0,
-                EmailConfirmed = true // Auto-confirm for hired collectors
+                EmailConfirmed = true,
+                City = dto.City,
+                Street = dto.Street,
+                BuildingNo = dto.BuildingNo,
+                Apartment = dto.Apartment
             };
 
             var result = await _userManager.CreateAsync(collector, dto.Password);
@@ -147,7 +164,11 @@ namespace BusinessLogicLayer.Services
                 Email = collector.Email ?? string.Empty,
                 PhoneNumber = collector.PhoneNumber,
                 AssignedOrdersCount = orders.Count(),
-                HiredDate = DateTime.UtcNow
+                HiredDate = DateTime.UtcNow,
+                City = collector.City,
+                Street = collector.Street,
+                BuildingNo = collector.BuildingNo,
+                Apartment = collector.Apartment
             };
         }
 
@@ -169,7 +190,11 @@ namespace BusinessLogicLayer.Services
                     Email = collector.Email ?? string.Empty,
                     PhoneNumber = collector.PhoneNumber,
                     AssignedOrdersCount = orders.Count(),
-                    HiredDate = DateTime.UtcNow // You might want to add this to ApplicationUser
+                    HiredDate = DateTime.UtcNow,
+                    City = collector.City,
+                    Street = collector.Street,
+                    BuildingNo = collector.BuildingNo,
+                    Apartment = collector.Apartment
                 });
             }
 
@@ -196,7 +221,11 @@ namespace BusinessLogicLayer.Services
                 Email = collector.Email ?? string.Empty,
                 PhoneNumber = collector.PhoneNumber,
                 AssignedOrdersCount = orders.Count(),
-                HiredDate = DateTime.UtcNow
+                HiredDate = DateTime.UtcNow,
+                City = collector.City,
+                Street = collector.Street,
+                BuildingNo = collector.BuildingNo,
+                Apartment = collector.Apartment
             };
         }
 

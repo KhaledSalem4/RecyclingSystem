@@ -28,7 +28,19 @@ namespace BusinessLogicLayer.Services
                 FactoryId = entity.FactoryId,
                 UserName = entity.User?.UserName,
                 CollectorName = entity.Collector?.UserName,
-                FactoryName = entity.Factory?.Name
+                FactoryName = entity.Factory?.Name,
+                
+                // User Address
+                UserCity = entity.User?.City,
+                UserStreet = entity.User?.Street,
+                UserBuildingNo = entity.User?.BuildingNo,
+                UserApartment = entity.User?.Apartment,
+                
+                // Collector Address
+                CollectorCity = entity.Collector?.City,
+                CollectorStreet = entity.Collector?.Street,
+                CollectorBuildingNo = entity.Collector?.BuildingNo,
+                CollectorApartment = entity.Collector?.Apartment
             };
         }
 

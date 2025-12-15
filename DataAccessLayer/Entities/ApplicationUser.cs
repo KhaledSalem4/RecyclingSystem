@@ -19,7 +19,12 @@ namespace DataAccessLayer.Entities
         {
             get; set;
         }
-
+        
+        // Address Information
+        public string? City { get; set; }
+        public string? Street { get; set; }
+        public string? BuildingNo { get; set; }
+        public string? Apartment { get; set; }
 
         public ICollection<Order> Orders { get; set; } = new HashSet<Order>();
         public ICollection<HistoryReward> HistoryRewards { get; set; } = new HashSet<HistoryReward>();

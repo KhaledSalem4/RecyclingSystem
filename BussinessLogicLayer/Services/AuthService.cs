@@ -42,8 +42,12 @@ namespace BusinessLogicLayer.Services
                 FullName = dto.FullName,
                 Email = dto.Email,
                 UserName = dto.Email,
-                PhoneNumber=dto.PhoneNumber,
-                Points = 0
+                PhoneNumber = dto.PhoneNumber,
+                Points = 0,
+                City = dto.City,
+                Street = dto.Street,
+                BuildingNo = dto.BuildingNo,
+                Apartment = dto.Apartment
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
