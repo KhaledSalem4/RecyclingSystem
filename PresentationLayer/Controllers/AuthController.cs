@@ -1,5 +1,7 @@
 ﻿using BusinessLogicLayer.IServices;
 using BussinessLogicLayer.DTOs.AppUser;
+using DataAccessLayer.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
@@ -11,10 +13,108 @@ namespace RecyclingSystem.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, UserManager<ApplicationUser> userManager)
         {
             _authService = authService;
+            _userManager = userManager;
+        }
+
+        // 🔍 DIAGNOSTIC ENDPOINT - Check admin status
+        [HttpGet("check-admin")]
+        public async Task<IActionResult> CheckAdmin()
+        {
+            var admin = await _userManager.FindByEmailAsync("admin@recyclingsystem.com");
+            
+            if (admin == null)
+                return Ok(new { exists = false, message = "Admin account does not exist in database" });
+
+            var roles = await _userManager.GetRolesAsync(admin);
+            
+            return Ok(new
+            {
+                exists = true,
+                email = admin.Email,
+                emailConfirmed = admin.EmailConfirmed,
+                lockoutEnabled = admin.LockoutEnabled,
+                accessFailedCount = admin.AccessFailedCount,
+                roles = roles,
+                phoneNumber = admin.PhoneNumber,
+                fullName = admin.FullName
+            });
+        }
+
+        // 🔧 FIX ENDPOINT - Manually fix admin account
+        [HttpPost("fix-admin")]
+        public async Task<IActionResult> FixAdmin()
+        {
+            var admin = await _userManager.FindByEmailAsync("admin@recyclingsystem.com");
+            
+            if (admin == null)
+                return NotFound("❌ Admin account not found in database. Use create-admin endpoint first.");
+
+            admin.EmailConfirmed = true;
+            admin.LockoutEnabled = false;
+            admin.AccessFailedCount = 0;
+            
+            var result = await _userManager.UpdateAsync(admin);
+
+            if (!result.Succeeded)
+                return BadRequest(new { errors = result.Errors });
+
+            // Ensure admin role
+            if (!await _userManager.IsInRoleAsync(admin, "Admin"))
+            {
+                await _userManager.AddToRoleAsync(admin, "Admin");
+            }
+
+            return Ok(new
+            {
+                message = "✅ Admin account fixed successfully",
+                emailConfirmed = admin.EmailConfirmed,
+                lockoutEnabled = admin.LockoutEnabled
+            });
+        }
+
+        // 🆕 CREATE ENDPOINT - Force create admin if missing
+        [HttpPost("create-admin")]
+        public async Task<IActionResult> CreateAdmin()
+        {
+            var existing = await _userManager.FindByEmailAsync("admin@recyclingsystem.com");
+            if (existing != null)
+                return BadRequest("Admin account already exists. Use fix-admin endpoint instead.");
+
+            var adminUser = new ApplicationUser
+            {
+                FullName = "System Administrator",
+                Email = "admin@recyclingsystem.com",
+                UserName = "admin@recyclingsystem.com",
+                PhoneNumber = "+1234567890",
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = true,
+                LockoutEnabled = false,
+                Points = 0,
+                City = "System",
+                Street = "Admin",
+                BuildingNo = "1",
+                Apartment = "1"
+            };
+
+            var result = await _userManager.CreateAsync(adminUser, "Admin@123");
+
+            if (!result.Succeeded)
+                return BadRequest(new { errors = result.Errors });
+
+            await _userManager.AddToRoleAsync(adminUser, "Admin");
+
+            return Ok(new
+            {
+                message = "✅ Admin account created successfully",
+                email = adminUser.Email,
+                password = "Admin@123",
+                emailConfirmed = true
+            });
         }
 
         [HttpPost("register")]

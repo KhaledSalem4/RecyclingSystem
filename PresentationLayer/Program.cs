@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using RecyclingSystem.Data;
 using Scalar.AspNetCore;
 using System.Text;
 
@@ -17,7 +18,7 @@ namespace RecyclingSystem
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -117,6 +118,25 @@ namespace RecyclingSystem
 
             var app = builder.Build();
 
+            // Seed Admin Account
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                    var configuration = services.GetRequiredService<IConfiguration>();
+
+                    await DbInitializer.SeedAdminAccountAsync(userManager, roleManager, configuration);
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "❌ An error occurred while seeding the admin account.");
+                }
+            }
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -152,7 +172,7 @@ namespace RecyclingSystem
 
             app.MapControllers();
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

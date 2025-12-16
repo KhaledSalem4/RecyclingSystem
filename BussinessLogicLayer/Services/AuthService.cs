@@ -37,6 +37,21 @@ namespace BusinessLogicLayer.Services
 
         public async Task<IdentityResult> RegisterAsync(RegisterUserDto dto, string role)
         {
+            // Check if trying to create an Admin account
+            if (!string.IsNullOrEmpty(role) && role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                // Check if an admin already exists
+                var usersInAdminRole = await _userManager.GetUsersInRoleAsync("Admin");
+                if (usersInAdminRole.Any())
+                {
+                    return IdentityResult.Failed(new IdentityError 
+                    { 
+                        Code = "AdminAlreadyExists",
+                        Description = "An admin account already exists. Only one admin is allowed." 
+                    });
+                }
+            }
+
             var user = new ApplicationUser
             {
                 FullName = dto.FullName,
@@ -131,13 +146,34 @@ namespace BusinessLogicLayer.Services
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
+            {
+                Console.WriteLine($"❌ Login failed: User not found - {dto.Email}");
                 return null;
+            }
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, true);
+            Console.WriteLine($"🔍 User found: {user.Email}, EmailConfirmed: {user.EmailConfirmed}");
+
+            var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: false);
+            
             if (!result.Succeeded)
+            {
+                if (result.IsLockedOut)
+                {
+                    Console.WriteLine($"❌ Login failed: Account is locked out - {dto.Email}");
+                }
+                else if (result.IsNotAllowed)
+                {
+                    Console.WriteLine($"❌ Login failed: Sign-in not allowed (Email not confirmed?) - {dto.Email}");
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Login failed: Invalid password - {dto.Email}");
+                }
                 return null;
+            }
 
             var userRoles = await _userManager.GetRolesAsync(user);
+            Console.WriteLine($"✅ Login successful: {dto.Email}, Roles: {string.Join(", ", userRoles)}");
 
             var authClaims = new List<Claim>
     {
