@@ -39,7 +39,7 @@ namespace PresentationLayer.Controllers
         }
 
         /// <summary>
-        /// Accept/Take an available order
+        /// Accept/Take an available order (Collector self-assigns)
         /// </summary>
         [HttpPost("{orderId}/accept")]
         public async Task<IActionResult> AcceptOrder(int orderId)
@@ -102,48 +102,11 @@ namespace PresentationLayer.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
-
-        /// <summary>
-        /// Admin assigns order to specific collector
-        /// </summary>
-        [HttpPost("{orderId}/assign")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> AssignOrder(int orderId, [FromBody] AssignOrderRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(request.CollectorId))
-                return BadRequest("CollectorId is required");
-
-            try
-            {
-                var result = await _orderService.AssignOrderToCollectorAsync(orderId, request.CollectorId);
-
-                return Ok(new
-                {
-                    success = result,
-                    message = "Order assigned successfully",
-                    orderId = orderId,
-                    collectorId = request.CollectorId
-                });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-        }
     }
 
     // Request models
     public class UpdateOrderStatusRequest
     {
         public string NewStatus { get; set; }
-    }
-
-    public class AssignOrderRequest
-    {
-        public string CollectorId { get; set; }
     }
 }

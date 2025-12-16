@@ -65,3 +65,4 @@ secrets.json
 
 # Docker
 docker-compose.override.yml
+/COLLECTOR_ASSIGNMENT_USER_CANCEL.md

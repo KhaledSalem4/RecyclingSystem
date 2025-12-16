@@ -28,7 +28,19 @@ namespace BusinessLogicLayer.Services
                 FactoryId = entity.FactoryId,
                 UserName = entity.User?.UserName,
                 CollectorName = entity.Collector?.UserName,
-                FactoryName = entity.Factory?.Name
+                FactoryName = entity.Factory?.Name,
+                
+                // User Address
+                UserCity = entity.User?.City,
+                UserStreet = entity.User?.Street,
+                UserBuildingNo = entity.User?.BuildingNo,
+                UserApartment = entity.User?.Apartment,
+                
+                // Collector Address
+                CollectorCity = entity.Collector?.City,
+                CollectorStreet = entity.Collector?.Street,
+                CollectorBuildingNo = entity.Collector?.BuildingNo,
+                CollectorApartment = entity.Collector?.Apartment
             };
         }
 
@@ -208,7 +220,7 @@ namespace BusinessLogicLayer.Services
         public async Task<bool> CancelOrderAsync(int orderId)
         {
             var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
-
+            
             if (order == null)
                 return false;
 
@@ -216,7 +228,36 @@ namespace BusinessLogicLayer.Services
                 throw new InvalidOperationException("Cannot cancel a completed order.");
 
             order.Status = OrderStatus.Cancelled;
+            
+            _unitOfWork.Orders.Update(order);
+            await _unitOfWork.SaveChangesAsync();
 
+            return true;
+        }
+
+        /// <summary>
+        /// User cancels their own order
+        /// </summary>
+        public async Task<bool> UserCancelOrderAsync(int orderId, string userId)
+        {
+            var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
+            
+            if (order == null)
+                throw new KeyNotFoundException($"Order with ID {orderId} not found.");
+
+            // Verify user owns this order
+            if (order.UserId != userId)
+                throw new UnauthorizedAccessException("You can only cancel your own orders.");
+
+            // Check if order can be cancelled
+            if (order.Status == OrderStatus.Completed)
+                throw new InvalidOperationException("Cannot cancel a completed order.");
+
+            if (order.Status == OrderStatus.Delivered)
+                throw new InvalidOperationException("Cannot cancel an order that has been delivered.");
+
+            order.Status = OrderStatus.Cancelled;
+            
             _unitOfWork.Orders.Update(order);
             await _unitOfWork.SaveChangesAsync();
 
@@ -226,33 +267,7 @@ namespace BusinessLogicLayer.Services
         // ---------- NEW COLLECTOR METHODS ----------
 
         /// <summary>
-        /// Admin assigns an order to a collector
-        /// </summary>
-        public async Task<bool> AssignOrderToCollectorAsync(int orderId, string collectorId)
-        {
-            var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
-            if (order == null)
-                throw new KeyNotFoundException($"Order with ID {orderId} not found.");
-
-            if (order.Status != OrderStatus.Pending)
-                throw new InvalidOperationException("Only pending orders can be assigned.");
-
-            // Verify collector exists and has Collector role
-            var collector = await _unitOfWork.Users.GetByIdAsync(collectorId);
-            if (collector == null)
-                throw new KeyNotFoundException("Collector not found.");
-
-            order.CollectorId = collectorId;
-            order.Status = OrderStatus.Assigned;
-
-            _unitOfWork.Orders.Update(order);
-            await _unitOfWork.SaveChangesAsync();
-
-            return true;
-        }
-
-        /// <summary>
-        /// Collector accepts/picks up an available order
+        /// Collector accepts/picks up an available order (self-assignment)
         /// </summary>
         public async Task<bool> CollectorAcceptOrderAsync(int orderId, string collectorId)
         {

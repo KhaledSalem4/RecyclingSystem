@@ -13,5 +13,18 @@
         public string? UserName { get; set; }
         public string? CollectorName { get; set; }
         public string? FactoryName { get; set; }
+        
+        // User Address Information
+        public string? UserCity { get; set; }
+        public string? UserStreet { get; set; }
+        public string? UserBuildingNo { get; set; }
+        public string? UserApartment { get; set; }
+        
+        // Collector Address Information (if assigned)
+        public string? CollectorCity { get; set; }
+        public string? CollectorStreet { get; set; }
+        public string? CollectorBuildingNo { get; set; }
+        public string? CollectorApartment { get; set; }
     }
 }
+

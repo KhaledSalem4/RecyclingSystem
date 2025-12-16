@@ -2,6 +2,7 @@ using BusinessLogicLayer.IServices;
 using BussinessLogicLayer.DTOs.Order;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace PresentationLayer.Controllers
 {
@@ -122,17 +123,28 @@ namespace PresentationLayer.Controllers
         /// Complete an order and award points to the user based on materials recycled
         /// </summary>
         /// <param name="id">Order ID</param>
-        /// <returns>Success message with total points awarded</returns>
+        /// <returns>Success message with total poi nts awarded</returns>
         [HttpPost("{id}/complete")]
-        [Authorize(Policy = "AdminOnly")] // Or CollectorAccess
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> CompleteOrder(int id)
         {
-            var result = await _orderService.CompleteOrderAsync(id);
-            return Ok(new { success = result, message = "Order completed and points awarded" });
+            try
+            {
+                var result = await _orderService.CompleteOrderAsync(id);
+                return Ok(new { success = result, message = "Order completed and points awarded" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         /// <summary>
-        /// Cancel an order and revoke any awarded points
+        /// Cancel an order (Admin only - for any order)
         /// </summary>
         /// <param name="id">Order ID</param>
         /// <returns>Success message</returns>
@@ -140,8 +152,44 @@ namespace PresentationLayer.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> CancelOrder(int id)
         {
-            var result = await _orderService.CancelOrderAsync(id);
-            return Ok(new { success = result, message = "Order cancelled" });
+            try
+            {
+                var result = await _orderService.CancelOrderAsync(id);
+                return Ok(new { success = result, message = "Order cancelled" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// User cancels their own order
+        /// </summary>
+        /// <param name="id">Order ID</param>
+        /// <returns>Success message</returns>
+        [HttpPost("{id}/user-cancel")]
+        [Authorize(Policy = "UserAccess")]
+        public async Task<IActionResult> UserCancelOrder(int id)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var result = await _orderService.UserCancelOrderAsync(id, userId);
+                return Ok(new { success = result, message = "Order cancelled successfully" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
     }
 }

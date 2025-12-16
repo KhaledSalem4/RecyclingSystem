@@ -9,8 +9,8 @@ namespace DataAccessLayer.Entities
     public enum OrderStatus
     {
         Pending = 0,        // Order created, waiting for collector
-        Assigned = 1,       // Collector accepted the order
-        InProgress = 2,     // Collector picked up materials
+        Accepted = 1,       // Collector accepted the order
+        Collected = 2,     // Collector picked up materials
         Delivered = 3,      // Materials delivered to factory
         Completed = 4,      // Order completed, points awarded
         Cancelled = 5       // Order cancelled

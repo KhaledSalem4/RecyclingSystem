@@ -18,6 +18,12 @@ namespace BussinessLogicLayer.DTOs.AppUser
 
         [Phone]
         public string? PhoneNumber { get; set; }
+        
+        // Address Information
+        public string? City { get; set; }
+        public string? Street { get; set; }
+        public string? BuildingNo { get; set; }
+        public string? Apartment { get; set; }
     }
 
     public class CollectorDto
@@ -28,5 +34,11 @@ namespace BussinessLogicLayer.DTOs.AppUser
         public string? PhoneNumber { get; set; }
         public int AssignedOrdersCount { get; set; }
         public DateTime HiredDate { get; set; }
+        
+        // Address Information
+        public string? City { get; set; }
+        public string? Street { get; set; }
+        public string? BuildingNo { get; set; }
+        public string? Apartment { get; set; }
     }
 }

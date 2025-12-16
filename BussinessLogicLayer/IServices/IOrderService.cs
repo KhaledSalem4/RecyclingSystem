@@ -18,9 +18,9 @@ namespace BusinessLogicLayer.IServices
         // Points-related methods
         Task<bool> CompleteOrderAsync(int orderId);
         Task<bool> CancelOrderAsync(int orderId);
+        Task<bool> UserCancelOrderAsync(int orderId, string userId);
 
-        // Collector-related methods
-        Task<bool> AssignOrderToCollectorAsync(int orderId, string collectorId);
+        // Collector-related methods (only self-assignment)
         Task<bool> CollectorAcceptOrderAsync(int orderId, string collectorId);
         Task<bool> CollectorUpdateOrderStatusAsync(int orderId, string collectorId, string newStatus);
         Task<IEnumerable<OrderDto>> GetAvailableOrdersForCollectorsAsync();
