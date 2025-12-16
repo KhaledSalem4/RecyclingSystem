@@ -284,7 +284,7 @@ namespace BusinessLogicLayer.Services
                 throw new KeyNotFoundException("Collector not found.");
 
             order.CollectorId = collectorId;
-            order.Status = OrderStatus.Assigned;
+            order.Status = OrderStatus.Accepted;
 
             _unitOfWork.Orders.Update(order);
             await _unitOfWork.SaveChangesAsync();
@@ -312,8 +312,8 @@ namespace BusinessLogicLayer.Services
             // Validate status transitions
             var validTransitions = new Dictionary<OrderStatus, List<OrderStatus>>
                 {
-                    { OrderStatus.Assigned, new List<OrderStatus> { OrderStatus.InProgress, OrderStatus.Cancelled } },
-                    { OrderStatus.InProgress, new List<OrderStatus> { OrderStatus.Delivered, OrderStatus.Cancelled } },
+                    { OrderStatus.Accepted, new List<OrderStatus> { OrderStatus.Collected, OrderStatus.Cancelled } },
+                    { OrderStatus.Collected, new List<OrderStatus> { OrderStatus.Delivered, OrderStatus.Cancelled } },
                     { OrderStatus.Delivered, new List<OrderStatus> { OrderStatus.Completed } }
                 };
 
