@@ -83,6 +83,7 @@ namespace BusinessLogicLayer.Services
 
             // 🔗 رابط Angular بدل API
             var frontEndUrl = _config["AppSettings:FrontEndUrl"] ?? "http://localhost:4200";
+            var backendUrl = _config["AppSettings:BackendUrl"] ?? "https://localhost:7139";
             var confirmationLink =
                 $"{frontEndUrl}/confirm-email?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
             var emailBody = $@"
@@ -95,6 +96,13 @@ namespace BusinessLogicLayer.Services
 <body style='font-family: Arial, sans-serif; background-color:#f4f4f4; margin:0; padding:0;'>
 
     <table align='center' width='100%' cellpadding='0' cellspacing='0' style='max-width:600px; background:white; border-radius:10px; margin-top:40px; box-shadow:0 4px 8px rgba(0,0,0,0.1);'>
+        <tr>
+            <td style='background:#0bb56b; padding:20px; text-align:center; border-radius:10px 10px 0 0;'>
+                <img src='{backendUrl}/images/logo.png' alt='GreenZone Logo' style='width:120px; height:auto;' />
+                <h1 style='color:white; margin:10px 0 0 0; font-size:24px;'>GreenZone</h1>
+                <p style='color:#e8f5e9; margin:5px 0 0 0; font-size:13px;'>ZERO WASTE • Recycle. Renew. Repair</p>
+            </td>
+        </tr>
         <tr>
             <td style='padding:30px 25px; text-align:center;'>
                 <h2 style='color:#0bb56b; margin-bottom:10px;'>Confirm Your Email</h2>
@@ -119,7 +127,7 @@ namespace BusinessLogicLayer.Services
 
         <tr>
             <td style='text-align:center; padding:15px 0; font-size:13px; color:#aaa; background:#fafafa; border-radius:0 0 10px 10px;'>
-                © {DateTime.UtcNow.Year} GreenZone. All rights reserved.
+                🌿 © {DateTime.UtcNow.Year} GreenZone. All rights reserved. 🌍
             </td>
         </tr>
     </table>
