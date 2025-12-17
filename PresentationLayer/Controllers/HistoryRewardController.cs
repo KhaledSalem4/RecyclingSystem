@@ -18,7 +18,9 @@ namespace PresentationLayer.Controllers
             _service = service;
         }
 
-        // Admin: get all history records
+        /// <summary>
+        /// Get all redemption history records (Admin only)
+        /// </summary>
         [HttpGet]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetAll()
@@ -27,7 +29,9 @@ namespace PresentationLayer.Controllers
             return Ok(items);
         }
 
-        // Paged query for UI/grid
+        /// <summary>
+        /// Get paginated redemption history with filtering
+        /// </summary>
         [HttpGet("paged")]
         [Authorize(Policy = "UserAccess")]
         public async Task<IActionResult> GetPaged([FromQuery] HistoryRewardQueryParams query)
@@ -36,7 +40,9 @@ namespace PresentationLayer.Controllers
             return Ok(result);
         }
 
-        // Get by id (user or admin)
+        /// <summary>
+        /// Get specific redemption record by ID
+        /// </summary>
         [HttpGet("{id:int}")]
         [Authorize(Policy = "UserAccess")]
         public async Task<IActionResult> GetById(int id)
@@ -46,7 +52,9 @@ namespace PresentationLayer.Controllers
             return Ok(item);
         }
 
-        // Get by user (admin or the user)
+        /// <summary>
+        /// Get all redemption history for a specific user
+        /// </summary>
         [HttpGet("user/{userId}")]
         [Authorize(Policy = "UserAccess")]
         public async Task<IActionResult> GetByUser(string userId)
@@ -55,7 +63,20 @@ namespace PresentationLayer.Controllers
             return Ok(items);
         }
 
-        // Create record manually (admin)
+        /// <summary>
+        /// Get redemption summary/statistics for a user
+        /// </summary>
+        [HttpGet("user/{userId}/summary")]
+        [Authorize(Policy = "UserAccess")]
+        public async Task<IActionResult> GetSummary(string userId)
+        {
+            var summary = await _service.GetSummaryAsync(userId);
+            return Ok(summary);
+        }
+
+        /// <summary>
+        /// Manually create a redemption record (Admin only)
+        /// </summary>
         [HttpPost]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create([FromBody] CreateHistoryRewardDto dto)
@@ -65,24 +86,21 @@ namespace PresentationLayer.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.ID }, created);
         }
 
-        // Redeem endpoint for users
-        [HttpPost("redeem")]
-        [Authorize(Policy = "UserAccess")]
-        public async Task<IActionResult> Redeem([FromBody] RedeemHistoryRewardDto dto)
+        /// <summary>
+        /// Bulk create redemption records (Admin only)
+        /// </summary>
+        [HttpPost("bulk")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> BulkAdd([FromBody] CreateHistoryRewardDto[] dtos)
         {
-            if (dto == null) return BadRequest();
-            try
-            {
-                var created = await _service.RedeemAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = created.ID }, created);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            if (dtos == null || dtos.Length == 0) return BadRequest();
+            await _service.BulkAddAsync(dtos);
+            return Accepted();
         }
 
-        // Update status (admin)
+        /// <summary>
+        /// Update redemption status (Admin only) - e.g., Pending -> Completed, Cancelled
+        /// </summary>
         [HttpPut("{id:int}/status")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
@@ -93,17 +111,9 @@ namespace PresentationLayer.Controllers
             return NoContent();
         }
 
-        // Bulk add (admin)
-        [HttpPost("bulk")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> BulkAdd([FromBody] CreateHistoryRewardDto[] dtos)
-        {
-            if (dtos == null || dtos.Length == 0) return BadRequest();
-            await _service.BulkAddAsync(dtos);
-            return Accepted();
-        }
-
-        // Soft delete (admin)
+        /// <summary>
+        /// Soft delete a redemption record (Admin only)
+        /// </summary>
         [HttpDelete("{id:int}")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> SoftDelete(int id)
@@ -111,25 +121,6 @@ namespace PresentationLayer.Controllers
             var ok = await _service.SoftDeleteAsync(id);
             if (!ok) return NotFound();
             return NoContent();
-        }
-
-        // Summary for a user (user or admin)
-        [HttpGet("{userId}/summary")]
-        [Authorize(Policy = "UserAccess")]
-        public async Task<IActionResult> GetSummary(string userId)
-        {
-            var summary = await _service.GetSummaryAsync(userId);
-            return Ok(summary);
-        }
-
-        // Validate redeem (pre-check)
-        [HttpPost("validate-redeem")]
-        [Authorize(Policy = "UserAccess")]
-        public async Task<IActionResult> ValidateRedeem([FromBody] RedeemHistoryRewardDto dto)
-        {
-            if (dto == null) return BadRequest();
-            var ok = await _service.ValidateRedeemAsync(dto);
-            return Ok(new { valid = ok });
         }
     }
 }
