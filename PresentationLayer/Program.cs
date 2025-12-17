@@ -117,6 +117,7 @@ namespace RecyclingSystem
             });
 
             var app = builder.Build();
+            app.UseCors("AllowAll");
 
             // Seed Admin Account
             using (var scope = app.Services.CreateScope())
@@ -162,7 +163,6 @@ namespace RecyclingSystem
 
             app.UseHttpsRedirection();
 
-            app.UseCors("AllowAll");
 
             app.UseAuthentication();
             app.UseAuthorization();
