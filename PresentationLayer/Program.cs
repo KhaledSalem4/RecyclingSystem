@@ -145,14 +145,14 @@ namespace RecyclingSystem
                 app.UseSwagger();
                 app.UseSwaggerUI(options =>
                 {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Recycling System API v1");
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "GreenZone API v1");
                     options.RoutePrefix = "swagger";
                 });
 
                 // Enable Scalar UI (uses Swagger document)
                 app.MapScalarApiReference(options =>
                 {
-                    options.WithTitle("Recycling System API")
+                    options.WithTitle("GreenZone API")
                            .WithTheme(ScalarTheme.Moon)
                            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
                 });

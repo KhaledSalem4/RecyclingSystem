@@ -100,7 +100,7 @@ namespace BusinessLogicLayer.Services
                 <h2 style='color:#0bb56b; margin-bottom:10px;'>Confirm Your Email</h2>
                 <p style='font-size:15px; color:#555; margin:0;'>Hi {user.FullName},</p>
                 <p style='font-size:15px; color:#555; margin-top:10px; line-height:1.6;'>
-                    Thanks for joining <b>Recycling System</b>.<br/>
+                    Thanks for joining <b>GreenZone</b>.<br/>
                     Please confirm your email address to activate your account.
                 </p>
 
@@ -119,7 +119,7 @@ namespace BusinessLogicLayer.Services
 
         <tr>
             <td style='text-align:center; padding:15px 0; font-size:13px; color:#aaa; background:#fafafa; border-radius:0 0 10px 10px;'>
-                © {DateTime.UtcNow.Year} Recycling System. All rights reserved.
+                © {DateTime.UtcNow.Year} GreenZone. All rights reserved.
             </td>
         </tr>
     </table>
@@ -228,7 +228,7 @@ namespace BusinessLogicLayer.Services
     <div style='background:white; padding:25px; border-radius:0 0 8px 8px;'>
 
       <p style='font-size:15px; color:#555; margin:0;'>Hi {user.FullName},</p>
-      <p>You requested to reset your password for your <b>Recycling System</b> account.</p>
+      <p>You requested to reset your password for your <b>GreenZone</b> account.</p>
       <p>Click the button below to create a new password:</p>
 
       <p style='text-align:center;'>
@@ -244,7 +244,7 @@ namespace BusinessLogicLayer.Services
       <hr style='border:none; border-top:1px solid #ddd; margin-top:30px;' />
 
       <p style='font-size:13px; color:#888; text-align:center;'>
-        © {DateTime.UtcNow.Year} Recycling System — All rights reserved.
+        © {DateTime.UtcNow.Year} GreenZone — All rights reserved.
       </p>
     </div>
   </div>
