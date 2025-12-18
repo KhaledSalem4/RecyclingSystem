@@ -73,8 +73,8 @@ namespace BusinessLogicLayer.Services
         // User-facing Features
         public async Task<IEnumerable<RewardDto>> GetAvailableRewardsForUserAsync(string userId)
         {
-            var user = await _unitOfWork.Orders.FirstOrDefaultAsync(o => o.UserId == userId);
-            var userPoints = user?.User?.Points ?? 0;
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            var userPoints = user?.Points ?? 0;
 
             var rewards = await _unitOfWork.Rewards.GetAvailableRewardsForUserAsync(userPoints);
             return _mapper.Map<IEnumerable<RewardDto>>(rewards);
@@ -86,8 +86,8 @@ namespace BusinessLogicLayer.Services
 
             if (!string.IsNullOrEmpty(userId))
             {
-                var user = await _unitOfWork.Orders.FirstOrDefaultAsync(o => o.UserId == userId);
-                userPoints = user?.User?.Points ?? 0;
+                var user = await _unitOfWork.Users.GetByIdAsync(userId);
+                userPoints = user?.Points ?? 0;
             }
 
             var rewards = await _unitOfWork.Rewards.GetRewardsByCategoryAsync(category, userPoints);
@@ -106,8 +106,8 @@ namespace BusinessLogicLayer.Services
 
             if (!string.IsNullOrEmpty(userId))
             {
-                var user = await _unitOfWork.Orders.FirstOrDefaultAsync(o => o.UserId == userId);
-                userPoints = user?.User?.Points ?? 0;
+                var user = await _unitOfWork.Users.GetByIdAsync(userId);
+                userPoints = user?.Points ?? 0;
             }
 
             var rewards = await _unitOfWork.Rewards.SearchRewardsAsync(searchTerm, userPoints);

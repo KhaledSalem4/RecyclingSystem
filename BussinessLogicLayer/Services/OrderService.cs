@@ -30,6 +30,12 @@ namespace BusinessLogicLayer.Services
                 CollectorName = entity.Collector?.UserName,
                 FactoryName = entity.Factory?.Name,
                 
+                // Pickup Address (from Order itself)
+                City = entity.City,
+                Street = entity.Street,
+                BuildingNo = entity.BuildingNo,
+                Apartment = entity.Apartment,
+                
                 // User Address
                 UserCity = entity.User?.City,
                 UserStreet = entity.User?.Street,
@@ -40,7 +46,13 @@ namespace BusinessLogicLayer.Services
                 CollectorCity = entity.Collector?.City,
                 CollectorStreet = entity.Collector?.Street,
                 CollectorBuildingNo = entity.Collector?.BuildingNo,
-                CollectorApartment = entity.Collector?.Apartment
+                CollectorApartment = entity.Collector?.Apartment,
+                
+                // Factory Address
+                FactoryCity = entity.Factory?.City,
+                FactoryStreet = entity.Factory?.Street,
+                FactoryBuildingNo = entity.Factory?.BuildingNo,
+                FactoryArea = entity.Factory?.Area
             };
         }
 
@@ -112,42 +124,47 @@ namespace BusinessLogicLayer.Services
             if (appUser == null)
                 throw new KeyNotFoundException($"User with email {dto.Email} not found.");
 
+            // Update user address if not already set
+            if (string.IsNullOrEmpty(appUser.City) && !string.IsNullOrEmpty(dto.City))
+            {
+                appUser.City = dto.City;
+                appUser.Street = dto.Street;
+                appUser.BuildingNo = dto.BuildingNo;
+                appUser.Apartment = dto.Apartment;
+                _unitOfWork.Users.Update(appUser);
+            }
+
             // Parse material type
             if (!Enum.TryParse<MaterialType>(dto.TypeOfMaterial, ignoreCase: true, out var materialType))
                 throw new ArgumentException($"Invalid material type: {dto.TypeOfMaterial}");
 
-            // Find or create material
-            var materials = await _unitOfWork.Materials.GetMaterialsByTypeAsync(materialType.ToString());
-            var material = materials.FirstOrDefault();
-
-            if (material == null)
+            // Always create NEW material instance for each order
+            var material = new Material
             {
-                material = new Material
-                {
-                    TypeName = materialType.ToString(),
-                    Size = dto.Quantity,
-                    Price = 0
-                };
-                await _unitOfWork.Materials.AddAsync(material);
-            }
-            else
-            {
-                material.Size = dto.Quantity;
-            }
+                TypeName = materialType.ToString(),
+                Size = dto.Quantity,
+                Price = 0 // Price can be calculated based on business logic
+            };
+            await _unitOfWork.Materials.AddAsync(material);
 
-            // Find factory
+            // Find factory (TODO: improve selection logic based on city/capacity)
             var factories = await _unitOfWork.Factories.GetAllAsync();
             var factory = factories.FirstOrDefault();
             if (factory == null)
                 throw new InvalidOperationException("No factory available.");
 
-            // Create order entity
+            // Create order entity with pickup address
             var order = new Order
             {
                 OrderDate = DateOnly.FromDateTime(DateTime.Now),
                 Status = OrderStatus.Pending,
                 UserId = appUser.Id,
                 FactoryId = factory.ID,
+                // Pickup address from DTO
+                City = dto.City,
+                Street = dto.Street,
+                BuildingNo = dto.BuildingNo,
+                Apartment = dto.Apartment,
                 Materials = new List<Material> { material }
             };
 
@@ -284,7 +301,7 @@ namespace BusinessLogicLayer.Services
                 throw new KeyNotFoundException("Collector not found.");
 
             order.CollectorId = collectorId;
-            order.Status = OrderStatus.Assigned;
+            order.Status = OrderStatus.Accepted;
 
             _unitOfWork.Orders.Update(order);
             await _unitOfWork.SaveChangesAsync();
@@ -312,8 +329,8 @@ namespace BusinessLogicLayer.Services
             // Validate status transitions
             var validTransitions = new Dictionary<OrderStatus, List<OrderStatus>>
                 {
-                    { OrderStatus.Assigned, new List<OrderStatus> { OrderStatus.InProgress, OrderStatus.Cancelled } },
-                    { OrderStatus.InProgress, new List<OrderStatus> { OrderStatus.Delivered, OrderStatus.Cancelled } },
+                    { OrderStatus.Accepted, new List<OrderStatus> { OrderStatus.Collected, OrderStatus.Cancelled } },
+                    { OrderStatus.Collected, new List<OrderStatus> { OrderStatus.Delivered, OrderStatus.Cancelled } },
                     { OrderStatus.Delivered, new List<OrderStatus> { OrderStatus.Completed } }
                 };
 

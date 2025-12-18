@@ -25,6 +25,12 @@ namespace DataAccessLayer.Entities
         public int FactoryId { get; set; }
         public Factory? Factory { get; set; }
 
+        // Pickup Address (where collector should go)
+        public string? City { get; set; }
+        public string? Street { get; set; }
+        public string? BuildingNo { get; set; }
+        public string? Apartment { get; set; }
+
         public ICollection<Material> Materials { get; set; } = new HashSet<Material>();
     }
 }

@@ -37,6 +37,21 @@ namespace BusinessLogicLayer.Services
 
         public async Task<IdentityResult> RegisterAsync(RegisterUserDto dto, string role)
         {
+            // Check if trying to create an Admin account
+            if (!string.IsNullOrEmpty(role) && role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                // Check if an admin already exists
+                var usersInAdminRole = await _userManager.GetUsersInRoleAsync("Admin");
+                if (usersInAdminRole.Any())
+                {
+                    return IdentityResult.Failed(new IdentityError 
+                    { 
+                        Code = "AdminAlreadyExists",
+                        Description = "An admin account already exists. Only one admin is allowed." 
+                    });
+                }
+            }
+
             var user = new ApplicationUser
             {
                 FullName = dto.FullName,
@@ -68,6 +83,7 @@ namespace BusinessLogicLayer.Services
 
             // 🔗 رابط Angular بدل API
             var frontEndUrl = _config["AppSettings:FrontEndUrl"] ?? "http://localhost:4200";
+            var backendUrl = _config["AppSettings:BackendUrl"] ?? "https://localhost:7139";
             var confirmationLink =
                 $"{frontEndUrl}/confirm-email?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
             var emailBody = $@"
@@ -81,11 +97,18 @@ namespace BusinessLogicLayer.Services
 
     <table align='center' width='100%' cellpadding='0' cellspacing='0' style='max-width:600px; background:white; border-radius:10px; margin-top:40px; box-shadow:0 4px 8px rgba(0,0,0,0.1);'>
         <tr>
+            <td style='background:#0bb56b; padding:20px; text-align:center; border-radius:10px 10px 0 0;'>
+                <img src='{backendUrl}/images/logo.png' alt='GreenZone Logo' style='width:120px; height:auto;' />
+                <h1 style='color:white; margin:10px 0 0 0; font-size:24px;'>GreenZone</h1>
+                <p style='color:#e8f5e9; margin:5px 0 0 0; font-size:13px;'>ZERO WASTE • Recycle. Renew. Repair</p>
+            </td>
+        </tr>
+        <tr>
             <td style='padding:30px 25px; text-align:center;'>
                 <h2 style='color:#0bb56b; margin-bottom:10px;'>Confirm Your Email</h2>
                 <p style='font-size:15px; color:#555; margin:0;'>Hi {user.FullName},</p>
                 <p style='font-size:15px; color:#555; margin-top:10px; line-height:1.6;'>
-                    Thanks for joining <b>Recycling System</b>.<br/>
+                    Thanks for joining <b>GreenZone</b>.<br/>
                     Please confirm your email address to activate your account.
                 </p>
 
@@ -104,7 +127,7 @@ namespace BusinessLogicLayer.Services
 
         <tr>
             <td style='text-align:center; padding:15px 0; font-size:13px; color:#aaa; background:#fafafa; border-radius:0 0 10px 10px;'>
-                © {DateTime.UtcNow.Year} Recycling System. All rights reserved.
+                🌿 © {DateTime.UtcNow.Year} GreenZone. All rights reserved. 🌍
             </td>
         </tr>
     </table>
@@ -131,13 +154,34 @@ namespace BusinessLogicLayer.Services
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
+            {
+                Console.WriteLine($"❌ Login failed: User not found - {dto.Email}");
                 return null;
+            }
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, true);
+            Console.WriteLine($"🔍 User found: {user.Email}, EmailConfirmed: {user.EmailConfirmed}");
+
+            var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: false);
+            
             if (!result.Succeeded)
+            {
+                if (result.IsLockedOut)
+                {
+                    Console.WriteLine($"❌ Login failed: Account is locked out - {dto.Email}");
+                }
+                else if (result.IsNotAllowed)
+                {
+                    Console.WriteLine($"❌ Login failed: Sign-in not allowed (Email not confirmed?) - {dto.Email}");
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Login failed: Invalid password - {dto.Email}");
+                }
                 return null;
+            }
 
             var userRoles = await _userManager.GetRolesAsync(user);
+            Console.WriteLine($"✅ Login successful: {dto.Email}, Roles: {string.Join(", ", userRoles)}");
 
             var authClaims = new List<Claim>
     {
@@ -192,7 +236,7 @@ namespace BusinessLogicLayer.Services
     <div style='background:white; padding:25px; border-radius:0 0 8px 8px;'>
 
       <p style='font-size:15px; color:#555; margin:0;'>Hi {user.FullName},</p>
-      <p>You requested to reset your password for your <b>Recycling System</b> account.</p>
+      <p>You requested to reset your password for your <b>GreenZone</b> account.</p>
       <p>Click the button below to create a new password:</p>
 
       <p style='text-align:center;'>
@@ -208,7 +252,7 @@ namespace BusinessLogicLayer.Services
       <hr style='border:none; border-top:1px solid #ddd; margin-top:30px;' />
 
       <p style='font-size:13px; color:#888; text-align:center;'>
-        © {DateTime.UtcNow.Year} Recycling System — All rights reserved.
+        © {DateTime.UtcNow.Year} GreenZone — All rights reserved.
       </p>
     </div>
   </div>
