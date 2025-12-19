@@ -89,6 +89,16 @@ namespace PresentationLayer.Controllers
         {
             try
             {
+                // Validate model state
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    return BadRequest(new { errors });
+                }
+
                 string? imageUrl = null;
 
                 // Upload image if provided
@@ -110,13 +120,17 @@ namespace PresentationLayer.Controllers
                 var reward = await _rewardService.AddAsync(createDto);
                 return CreatedAtAction(nameof(GetById), new { id = reward.ID }, reward);
             }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { error = ex.Message });
+            }
             catch (ArgumentException ex)
             {
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
+                return StatusCode(500, new { error = $"Internal server error: {ex.Message}", details = ex.InnerException?.Message });
             }
         }
 

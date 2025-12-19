@@ -25,20 +25,22 @@ namespace BusinessLogicLayer.Services
 
         private string GetBaseUrl()
         {
-            // Try to get from appsettings first
+            // Priority 1: Use configured BackendUrl if available (for production/deployment)
             var backendUrl = _configuration["AppSettings:BackendUrl"];
             if (!string.IsNullOrEmpty(backendUrl))
                 return backendUrl.TrimEnd('/');
 
-            // Fallback to current request URL
+            // Priority 2: Build from current request context (handles any host/port dynamically)
             var request = _httpContextAccessor.HttpContext?.Request;
             if (request != null)
             {
-                return $"{request.Scheme}://{request.Host}";
+                var scheme = request.Scheme;
+                var host = request.Host.Value;
+                return $"{scheme}://{host}";
             }
 
-            // Last resort fallback
-            return "https://localhost:7139";
+            // Priority 3: Fallback for edge cases where HttpContext is not available
+            return "https://localhost:44375";
         }
 
         public async Task<string> SaveRewardImageAsync(IFormFile imageFile)
