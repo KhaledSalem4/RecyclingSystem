@@ -72,19 +72,28 @@ namespace PresentationLayer.Controllers
         {
             try
             {
+                Console.WriteLine($"?? Attempting to fire collector: {id}");
+                
                 var result = await _userService.FireCollectorAsync(id);
+                
                 if (!result)
-                    return NotFound("Collector not found");
+                {
+                    Console.WriteLine($"? Collector not found or not a collector: {id}");
+                    return NotFound(new { error = "Collector not found or user is not a collector" });
+                }
 
+                Console.WriteLine($"? Collector fired successfully: {id}");
                 return Ok(new { success = true, message = "Collector fired successfully" });
             }
             catch (InvalidOperationException ex)
             {
+                Console.WriteLine($"?? Cannot fire collector: {ex.Message}");
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = "An error occurred", details = ex.Message });
+                Console.WriteLine($"? Error firing collector: {ex.Message}");
+                return StatusCode(500, new { error = "An error occurred while firing the collector", details = ex.Message });
             }
         }
     }

@@ -235,18 +235,38 @@ namespace BusinessLogicLayer.Services
             if (collector == null)
                 return false;
 
+            // Verify user is actually a collector
+            var isCollector = await _userManager.IsInRoleAsync(collector, "Collector");
+            if (!isCollector)
+                return false;
+
             // Check if user has assigned orders
             var orders = await _unitOfWork.Orders.GetOrdersByCollectorIdAsync(collectorId);
-            var activeOrders = orders.Where(o => o.Status == OrderStatus.Pending).ToList();
+            
+            // Active orders are: Pending, Accepted, Collected, or Delivered
+            var activeOrders = orders.Where(o => 
+                o.Status == OrderStatus.Pending || 
+                o.Status == OrderStatus.Accepted || 
+                o.Status == OrderStatus.Collected || 
+                o.Status == OrderStatus.Delivered
+            ).ToList();
 
             if (activeOrders.Any())
-                throw new InvalidOperationException("Cannot fire collector with active pending orders. Please reassign orders first.");
+            {
+                var orderStatuses = string.Join(", ", activeOrders.Select(o => $"#{o.ID} ({o.Status})"));
+                throw new InvalidOperationException(
+                    $"Cannot fire collector with active orders: {orderStatuses}. " +
+                    "Please complete or reassign these orders first.");
+            }
 
             // Remove Collector role
-            await _userManager.RemoveFromRoleAsync(collector, "Collector");
-
-            // Optionally, you could delete the user entirely
-            // await _userManager.DeleteAsync(collector);
+            var result = await _userManager.RemoveFromRoleAsync(collector, "Collector");
+            
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Failed to remove collector role: {errors}");
+            }
 
             return true;
         }
