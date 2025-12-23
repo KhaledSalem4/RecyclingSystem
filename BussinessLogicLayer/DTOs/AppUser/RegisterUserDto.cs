@@ -13,7 +13,7 @@ namespace BussinessLogicLayer.DTOs.AppUser
         public string Email { get; set; }
         
         [Required]
-        [Phone]
+        [RegularExpression(@"^01[0-2,5]{1}[0-9]{8}$", ErrorMessage = "Invalid Egyptian phone number")]
         public string PhoneNumber { get; set; }
         
         [Required]

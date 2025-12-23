@@ -29,6 +29,8 @@ namespace RecyclingSystem
             builder.Services.AddDbContext<RecyclingDbContext>(options =>
                 options.UseSqlServer(conString, sql => sql.EnableRetryOnFailure()));
 
+            // Add HttpContextAccessor for services that need access to HTTP context
+            builder.Services.AddHttpContextAccessor();
            
             // Configure Identity with ApplicationUser and Roles
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

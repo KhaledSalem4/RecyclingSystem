@@ -1,4 +1,4 @@
-using BusinessLogicLayer.IServices;
+﻿using BusinessLogicLayer.IServices;
 using BussinessLogicLayer.DTOs.AppUser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -65,26 +65,43 @@ namespace PresentationLayer.Controllers
         }
 
         /// <summary>
-        /// Fire a collector (remove Collector role)
+        /// Fire a collector (permanently delete from database)
         /// </summary>
         [HttpDelete("{id}/fire")]
         public async Task<IActionResult> FireCollector(string id)
         {
             try
             {
+                Console.WriteLine($"🔥 Attempting to fire and delete collector: {id}");
+                
                 var result = await _userService.FireCollectorAsync(id);
+                
                 if (!result)
-                    return NotFound("Collector not found");
+                {
+                    Console.WriteLine($"❌ Collector not found or not a collector: {id}");
+                    return NotFound(new { error = "Collector not found or user is not a collector" });
+                }
 
-                return Ok(new { success = true, message = "Collector fired successfully" });
+                Console.WriteLine($"✅ Collector deleted from database: {id}");
+                return Ok(new 
+                { 
+                    success = true, 
+                    message = "Collector has been permanently removed from the system" 
+                });
             }
             catch (InvalidOperationException ex)
             {
+                Console.WriteLine($"⚠️ Cannot fire collector: {ex.Message}");
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = "An error occurred", details = ex.Message });
+                Console.WriteLine($"❌ Error firing collector: {ex.Message}");
+                return StatusCode(500, new 
+                { 
+                    error = "An error occurred while deleting the collector", 
+                    details = ex.Message 
+                });
             }
         }
     }

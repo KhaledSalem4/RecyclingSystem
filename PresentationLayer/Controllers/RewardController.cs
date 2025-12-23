@@ -89,6 +89,16 @@ namespace PresentationLayer.Controllers
         {
             try
             {
+                // Validate model state
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    return BadRequest(new { errors });
+                }
+
                 string? imageUrl = null;
 
                 // Upload image if provided
@@ -110,13 +120,17 @@ namespace PresentationLayer.Controllers
                 var reward = await _rewardService.AddAsync(createDto);
                 return CreatedAtAction(nameof(GetById), new { id = reward.ID }, reward);
             }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { error = ex.Message });
+            }
             catch (ArgumentException ex)
             {
                 return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
+                return StatusCode(500, new { error = $"Internal server error: {ex.Message}", details = ex.InnerException?.Message });
             }
         }
 
@@ -130,14 +144,25 @@ namespace PresentationLayer.Controllers
                 if (id != dto.ID)
                     return BadRequest(new { error = "ID mismatch" });
 
-                string? imageUrl = dto.ImageUrl;
+                // Get existing reward to preserve image URL if not updating image
+                var existingReward = await _rewardService.GetByIdAsync(id);
+                if (existingReward == null)
+                    return NotFound(new { error = "Reward not found" });
 
-                // Upload new image if provided
+                string? imageUrl = existingReward.ImageUrl; // ✅ Preserve existing image by default
+
+                // Only update/delete image if a new file is explicitly uploaded
                 if (dto.ImageFile != null)
                 {
-                    var existingReward = await _rewardService.GetByIdAsync(id);
-                    imageUrl = await _imageService.UpdateRewardImageAsync(existingReward?.ImageUrl, dto.ImageFile);
+                    // Delete old image and upload new one
+                    imageUrl = await _imageService.UpdateRewardImageAsync(existingReward.ImageUrl, dto.ImageFile);
                 }
+                // If no file but URL provided and it's different, update URL only
+                else if (!string.IsNullOrWhiteSpace(dto.ImageUrl) && dto.ImageUrl != existingReward.ImageUrl)
+                {
+                    imageUrl = dto.ImageUrl;
+                }
+                // Otherwise keep existing image URL (when editing name, description, etc.)
 
                 var updateDto = new UpdateRewardDto
                 {
@@ -148,11 +173,15 @@ namespace PresentationLayer.Controllers
                     RequiredPoints = dto.RequiredPoints,
                     StockQuantity = dto.StockQuantity,
                     IsAvailable = dto.IsAvailable,
-                    ImageUrl = imageUrl
+                    ImageUrl = imageUrl // ✅ Preserved or updated
                 };
 
                 var reward = await _rewardService.UpdateAsync(updateDto);
                 return Ok(reward);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { error = ex.Message });
             }
             catch (ArgumentException ex)
             {
@@ -160,7 +189,7 @@ namespace PresentationLayer.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
+                return StatusCode(500, new { error = $"Internal server error: {ex.Message}", details = ex.InnerException?.Message });
             }
         }
 

@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using BusinessLogicLayer.IServices;
 using BussinessLogicLayer.DTOs.AppUser;
 using DataAccessLayer.Entities;
@@ -235,19 +235,55 @@ namespace BusinessLogicLayer.Services
             if (collector == null)
                 return false;
 
+            // Verify user is actually a collector
+            var isCollector = await _userManager.IsInRoleAsync(collector, "Collector");
+            if (!isCollector)
+                return false;
+
             // Check if user has assigned orders
             var orders = await _unitOfWork.Orders.GetOrdersByCollectorIdAsync(collectorId);
-            var activeOrders = orders.Where(o => o.Status == OrderStatus.Pending).ToList();
+            
+            // Active orders are: Pending, Accepted, Collected, or Delivered
+            var activeOrders = orders.Where(o => 
+                o.Status == OrderStatus.Pending || 
+                o.Status == OrderStatus.Accepted || 
+                o.Status == OrderStatus.Collected || 
+                o.Status == OrderStatus.Delivered
+            ).ToList();
 
             if (activeOrders.Any())
-                throw new InvalidOperationException("Cannot fire collector with active pending orders. Please reassign orders first.");
+            {
+                var orderStatuses = string.Join(", ", activeOrders.Select(o => $"#{o.ID} ({o.Status})"));
+                throw new InvalidOperationException(
+                    $"Cannot fire collector with active orders: {orderStatuses}. " +
+                    "Please complete or reassign these orders first.");
+            }
 
-            // Remove Collector role
-            await _userManager.RemoveFromRoleAsync(collector, "Collector");
+            // Store collector name for audit purposes
+            var collectorName = collector.FullName;
+            var collectorEmail = collector.Email;
 
-            // Optionally, you could delete the user entirely
-            // await _userManager.DeleteAsync(collector);
+            // Nullify collector reference in ALL orders to allow deletion
+            foreach (var order in orders)
+            {
+                order.CollectorId = null;
+                // Optional: Store collector name in order notes/description for history
+                // order.Notes = $"Handled by {collectorName} (fired)";
+                _unitOfWork.Orders.Update(order);
+            }
 
+            await _unitOfWork.SaveChangesAsync();
+
+            // Delete the collector user completely from database
+            var result = await _userManager.DeleteAsync(collector);
+            
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Failed to delete collector: {errors}");
+            }
+
+            Console.WriteLine($"✅ Collector deleted from database: {collectorName} ({collectorEmail})");
             return true;
         }
     }
