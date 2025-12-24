@@ -121,35 +121,84 @@ namespace RecyclingSystem.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return BadRequest(new
+                {
+                    errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => new
+                        {
+                            code = "ValidationError",
+                            description = e.ErrorMessage
+                        })
+                });
+            }
 
             if (dto.Password != dto.ConfirmPassword)
-                return BadRequest("Passwords do not match.");
+            {
+                return BadRequest(new
+                {
+                    errors = new[]
+                    {
+                new { code = "PasswordMismatch", description = "Passwords do not match." }
+            }
+                });
+            }
 
             var result = await _authService.RegisterAsync(dto, role: "User");
 
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+            {
+                return BadRequest(new
+                {
+                    errors = result.Errors.Select(e => new
+                    {
+                        code = e.Code,
+                        description = e.Description
+                    })
+                });
+            }
 
-            return Ok("User registered successfully.");
+            return Ok(new { message = "User registered successfully." });
         }
+
+
         [HttpGet("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
+        public async Task<IActionResult> ConfirmEmail(
+            [FromQuery] string email,
+            [FromQuery] string token)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
                 return BadRequest("Email and token are required.");
 
-            // Decode Token - VERY IMPORTANT
+            // Decode Token (important)
             token = Uri.UnescapeDataString(token);
             token = token.Replace(" ", "+");
 
-            var result = await _authService.ConfirmEmailAsync(email, token);
+            // 👇 هات اليوزر الأول
+            var user = await _authService.GetUserByEmailAsync(email);
+            if (user == null)
+                return BadRequest("Invalid email.");
 
+            // ✅ لو متأكد قبل كده
+            if (user.EmailConfirmed)
+                return Ok("Email already confirmed.");
+
+            var result = await _authService.ConfirmEmailAsync(email, token);
             if (!result.Succeeded)
+            {
+                var user2 = await _userManager.FindByEmailAsync(email);
+
+                if (user2 != null && user2.EmailConfirmed)
+                    return Ok("Email already confirmed.");
+
                 return BadRequest("Invalid or expired confirmation link.");
+            }
+
 
             return Ok("Email confirmed successfully.");
         }
+
 
 
         [HttpPost("login")]

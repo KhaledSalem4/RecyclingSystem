@@ -1,4 +1,4 @@
-using BusinessLogicLayer.IServices;
+﻿using BusinessLogicLayer.IServices;
 using BussinessLogicLayer.DTOs.Order;
 using DataAccessLayer.Entities;
 using DataAccessLayer.UnitOfWork;
@@ -198,41 +198,34 @@ namespace BusinessLogicLayer.Services
 
         public async Task<bool> CompleteOrderAsync(int orderId)
         {
-            try
-            {
-                await _unitOfWork.BeginTransactionAsync();
+            var order = await _unitOfWork.Orders.GetOrderWithDetailsAsync(orderId);
 
-                var order = await _unitOfWork.Orders.GetOrderWithDetailsAsync(orderId);
+            if (order == null)
+                throw new KeyNotFoundException($"Order with ID {orderId} not found.");
 
-                if (order == null)
-                    throw new KeyNotFoundException($"Order with ID {orderId} not found.");
+            if (order.Status != OrderStatus.Delivered)
+                throw new InvalidOperationException("Only delivered orders can be completed.");
 
-                if (order.Status != OrderStatus.Delivered)
-                    throw new InvalidOperationException("Only delivered orders can be completed.");
+            if (order.User == null)
+                throw new InvalidOperationException("Order has no associated user.");
 
-                if (order.User == null)
-                    throw new InvalidOperationException("Order has no associated user.");
+            // 1️⃣ Calculate points
+            int pointsEarned = PointsCalculator.CalculateOrderPoints(order);
 
-                // Calculate points from materials
-                int pointsEarned = PointsCalculator.CalculateOrderPoints(order);
+            // 2️⃣ Award points to user
+            order.User.Points += pointsEarned;
 
-                // Award points to user
-                order.User.Points += pointsEarned;
+            // 3️⃣ Update order status
+            order.Status = OrderStatus.Completed;
 
-                // Update order status
-                order.Status = OrderStatus.Completed;
+            _unitOfWork.Orders.Update(order);
 
-                _unitOfWork.Orders.Update(order);
-                await _unitOfWork.CommitTransactionAsync();
+            // 4️⃣ Save once (atomic)
+            await _unitOfWork.SaveChangesAsync();
 
-                return true;
-            }
-            catch
-            {
-                await _unitOfWork.RollbackTransactionAsync();
-                throw;
-            }
+            return true;
         }
+
 
         public async Task<bool> CancelOrderAsync(int orderId)
         {

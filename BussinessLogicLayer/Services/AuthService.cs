@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+
 using static System.Net.Mime.MediaTypeNames;
 
 
@@ -150,6 +151,11 @@ namespace BusinessLogicLayer.Services
                 return IdentityResult.Failed(new IdentityError { Description = "User not found." });
             return await _userManager.ConfirmEmailAsync(user, token);
         }
+        public async Task<ApplicationUser?> GetUserByEmailAsync(string email)
+        {
+            return await _userManager.FindByEmailAsync(email);
+        }
+
         public async Task<string> LoginAndGenerateTokenAsync(LoginUserDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
