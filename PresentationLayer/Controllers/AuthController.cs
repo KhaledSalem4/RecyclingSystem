@@ -162,7 +162,6 @@ namespace RecyclingSystem.Controllers
             return Ok(new { message = "User registered successfully." });
         }
 
-
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(
             [FromQuery] string email,
@@ -171,35 +170,20 @@ namespace RecyclingSystem.Controllers
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
                 return BadRequest("Email and token are required.");
 
-            // Decode Token (important)
-            token = Uri.UnescapeDataString(token);
-            token = token.Replace(" ", "+");
-
-            // 👇 هات اليوزر الأول
-            var user = await _authService.GetUserByEmailAsync(email);
+            var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
                 return BadRequest("Invalid email.");
 
-            // ✅ لو متأكد قبل كده
             if (user.EmailConfirmed)
                 return Ok("Email already confirmed.");
 
-            var result = await _authService.ConfirmEmailAsync(email, token);
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+
             if (!result.Succeeded)
-            {
-                var user2 = await _userManager.FindByEmailAsync(email);
-
-                if (user2 != null && user2.EmailConfirmed)
-                    return Ok("Email already confirmed.");
-
                 return BadRequest("Invalid or expired confirmation link.");
-            }
-
 
             return Ok("Email confirmed successfully.");
         }
-
-
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
