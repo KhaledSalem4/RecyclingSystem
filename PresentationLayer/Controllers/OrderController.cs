@@ -124,7 +124,7 @@ namespace PresentationLayer.Controllers
         /// </summary>
         /// <param name="id">Order ID</param>
         /// <returns>Success message with total poi nts awarded</returns>
-   
+       
         // In OrderController.cs CompleteOrder endpoint
         [HttpPost("{id}/complete")]
         [Authorize(Policy = "AdminOnly")]
