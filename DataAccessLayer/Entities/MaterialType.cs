@@ -1,4 +1,4 @@
-﻿using System;
+﻿    using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +8,9 @@ namespace DataAccessLayer.Entities
 {
     public enum MaterialType
     {
-        Plastic,
-        Cartoon,
+        Plastic,    
         Can,
-       
+        Carton,
+        Glass
     }
 }
