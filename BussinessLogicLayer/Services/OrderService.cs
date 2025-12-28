@@ -214,13 +214,15 @@ namespace BusinessLogicLayer.Services
 
             // 2️⃣ Award points to user
             order.User.Points += pointsEarned;
+            
+            // ✅ FIX: Explicitly update user to track points change
+            _unitOfWork.Users.Update(order.User);
 
             // 3️⃣ Update order status
             order.Status = OrderStatus.Completed;
-
             _unitOfWork.Orders.Update(order);
 
-            // 4️⃣ Save once (atomic)
+            // 4️⃣ Save both User and Order changes (atomic)
             await _unitOfWork.SaveChangesAsync();
 
             return true;

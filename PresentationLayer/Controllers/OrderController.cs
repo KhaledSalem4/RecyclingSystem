@@ -126,12 +126,27 @@ namespace PresentationLayer.Controllers
         /// <returns>Success message with total poi nts awarded</returns>
         [HttpPost("{id}/complete")]
         [Authorize(Policy = "AdminOnly")]
+        // In OrderController.cs CompleteOrder endpoint
+        [HttpPost("{id}/complete")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> CompleteOrder(int id)
         {
             try
             {
+                // Get order details first to calculate points
+                var order = await _orderService.GetByIdAsync(id);
+                if (order == null)
+                    return NotFound(new { error = "Order not found" });
+
                 var result = await _orderService.CompleteOrderAsync(id);
-                return Ok(new { success = result, message = "Order completed and points awarded" });
+
+                // Return points info
+                return Ok(new
+                {
+                    success = result,
+                    message = "Order completed and points awarded",
+                    pointsAwarded = "Check updated user points" // You can enhance this
+                });
             }
             catch (KeyNotFoundException ex)
             {
