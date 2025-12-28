@@ -11,6 +11,6 @@ namespace DataAccessLayer.Entities
         Plastic,
         Cartoon,
         Can,
-       
+        Glass
     }
 }
