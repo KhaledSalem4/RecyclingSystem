@@ -23,8 +23,13 @@ namespace BusinessLogicLayer.Services
         public async Task<IEnumerable<RewardDto>> GetAllAsync()
         {
             var rewards = await _unitOfWork.Rewards.GetAllAsync();
+
+            // 🔴 الفلترة الناقصة
+            rewards = rewards.Where(r => r.IsAvailable);
+
             return _mapper.Map<IEnumerable<RewardDto>>(rewards);
         }
+
 
         public async Task<RewardDto?> GetByIdAsync(int id)
         {
