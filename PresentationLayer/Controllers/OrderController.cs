@@ -69,18 +69,12 @@ namespace PresentationLayer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateOrderDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
         {
-            try
-            {
-                var createdOrder = await _orderService.AddAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = createdOrder.ID }, createdOrder);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var createdOrder = await _orderService.AddAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = createdOrder.ID }, createdOrder);
         }
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, OrderDto dto)

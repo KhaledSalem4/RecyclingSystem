@@ -118,54 +118,48 @@ namespace BusinessLogicLayer.Services
 
         public async Task<OrderDto> AddAsync(CreateOrderDto dto)
         {
-            // Find user by email using the Users repository
+            // 1️⃣ Find user by email
             var allUsers = await _unitOfWork.Users.GetAllAsync();
             var appUser = allUsers.FirstOrDefault(u => u.Email == dto.Email);
+
             if (appUser == null)
                 throw new KeyNotFoundException($"User with email {dto.Email} not found.");
 
-            // Update user address if not already set
+            // 2️⃣ Update user address if not already set
             if (string.IsNullOrEmpty(appUser.City) && !string.IsNullOrEmpty(dto.City))
             {
                 appUser.City = dto.City;
                 appUser.Street = dto.Street;
                 appUser.BuildingNo = dto.BuildingNo;
                 appUser.Apartment = dto.Apartment;
+
                 _unitOfWork.Users.Update(appUser);
             }
 
-            // Parse material type
-            if (!Enum.TryParse<MaterialType>(dto.TypeOfMaterial, ignoreCase: true, out var materialType))
-                throw new ArgumentException($"Invalid material type: {dto.TypeOfMaterial}");
-
-            // Always create NEW material instance for each order
-            var material = new Material
-            {
-                TypeName = materialType.ToString(),
-                Size = dto.Quantity,
-                Price = 0 // Price can be calculated based on business logic
-            };
-            await _unitOfWork.Materials.AddAsync(material);
-
-            // Find factory (TODO: improve selection logic based on city/capacity)
+            // 3️⃣ Find factory
             var factories = await _unitOfWork.Factories.GetAllAsync();
             var factory = factories.FirstOrDefault();
+
             if (factory == null)
                 throw new InvalidOperationException("No factory available.");
 
-            // Create order entity with pickup address
+            // 4️⃣ Create order (NO Material insert)
             var order = new Order
             {
                 OrderDate = DateOnly.FromDateTime(DateTime.Now),
                 Status = OrderStatus.Pending,
+
                 UserId = appUser.Id,
                 FactoryId = factory.ID,
-                // Pickup address from DTO
+
                 City = dto.City,
                 Street = dto.Street,
                 BuildingNo = dto.BuildingNo,
                 Apartment = dto.Apartment,
-                Materials = new List<Material> { material }
+
+                // ✅ enum مباشر
+                TypeOfMaterial = dto.TypeOfMaterial,
+                Quantity = dto.Quantity
             };
 
             await _unitOfWork.Orders.AddAsync(order);
@@ -174,6 +168,8 @@ namespace BusinessLogicLayer.Services
             var createdOrder = await _unitOfWork.Orders.GetOrderWithDetailsAsync(order.ID);
             return ToDto(createdOrder!);
         }
+
+
 
         public async Task UpdateAsync(OrderDto dto)
         {

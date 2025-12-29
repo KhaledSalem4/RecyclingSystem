@@ -39,13 +39,10 @@ namespace DataAccessLayer.Configurations
                    .HasForeignKey(o => o.FactoryId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            // Many-to-Many relationship with Materials
-            builder.HasMany(o => o.Materials)
-                   .WithMany(m => m.Orders)
-                   .UsingEntity<Dictionary<string, object>>(
-                        "OrderMaterial",
-                        j => j.HasOne<Material>().WithMany().HasForeignKey("MaterialId"),
-                        j => j.HasOne<Order>().WithMany().HasForeignKey("OrderId"));
+            builder.Property(o => o.TypeOfMaterial)
+                   .HasConversion<string>()
+                   .IsRequired();
+
         }
     }
 }

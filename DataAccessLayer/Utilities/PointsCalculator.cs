@@ -55,14 +55,14 @@ namespace DataAccessLayer.Utilities
         }
 
         /// <summary>
-        /// Calculates total points for an order
+        /// Calculates total points for an order (NEW SYSTEM)
         /// </summary>
         public static int CalculateOrderPoints(Order order)
         {
-            if (order?.Materials == null || !order.Materials.Any())
+            if (order == null)
                 return 0;
 
-            return CalculateTotalPoints(order.Materials);
+            return CalculatePoints(order.TypeOfMaterial, order.Quantity);
         }
     }
 }
