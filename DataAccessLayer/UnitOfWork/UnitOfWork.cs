@@ -36,34 +36,20 @@ namespace DataAccessLayer.UnitOfWork
 
         public async Task BeginTransactionAsync()
         {
-            // ✅ FIX: Check if transaction already exists
             if (_transaction != null)
-            {
-                return; // Transaction already active
-            }
+                return;
 
-            // Use execution strategy to handle retries
-            var strategy = _context.Database.CreateExecutionStrategy();
-            
-            await strategy.ExecuteAsync(async () =>
-            {
-                _transaction = await _context.Database.BeginTransactionAsync();
-            });
+            _transaction = await _context.Database.BeginTransactionAsync();
         }
+
 
         public async Task CommitTransactionAsync()
         {
             try
             {
-                if (_transaction == null)
-                {
-                    // No active transaction, just save changes
-                    await SaveChangesAsync();
-                    return;
-                }
-
                 await SaveChangesAsync();
-                await _transaction.CommitAsync();
+                if (_transaction != null)
+                    await _transaction.CommitAsync();
             }
             catch
             {
@@ -80,21 +66,17 @@ namespace DataAccessLayer.UnitOfWork
             }
         }
 
+
         public async Task RollbackTransactionAsync()
         {
             if (_transaction != null)
             {
-                try
-                {
-                    await _transaction.RollbackAsync();
-                }
-                finally
-                {
-                    await _transaction.DisposeAsync();
-                    _transaction = null;
-                }
+                await _transaction.RollbackAsync();
+                await _transaction.DisposeAsync();
+                _transaction = null;
             }
         }
+
 
         public void Dispose()
         {
@@ -102,9 +84,13 @@ namespace DataAccessLayer.UnitOfWork
             _context.Dispose();
         }
 
-        public IExecutionStrategy GetExecutionStrategy()
+        public IExecutionStrategy CreateExecutionStrategy()
         {
-            throw new NotImplementedException();
+            return _context.Database.CreateExecutionStrategy();
         }
+
+        public RecyclingDbContext DbContext => _context;
+
+
     }
 }

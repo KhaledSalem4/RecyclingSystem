@@ -91,8 +91,9 @@ namespace DataAccessLayer.Repositories.Impementations
         public async Task<Reward?> GetRewardForRedemptionAsync(int rewardId)
         {
             return await _dbSet
-                .FirstOrDefaultAsync(r => r.ID == rewardId && r.IsAvailable && r.StockQuantity > 0);
+                .FirstOrDefaultAsync(r => r.ID == rewardId);
         }
+
         // Added method to get rewards in a specific point range
         public async Task<IEnumerable<Reward>> GetRewardsInPointRangeAsync(int minPoints, int maxPoints)
         {

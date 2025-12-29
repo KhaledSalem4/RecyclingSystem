@@ -23,6 +23,7 @@ namespace DataAccessLayer.UnitOfWork
         Task RollbackTransactionAsync();
         
         // ✅ ADD: Get execution strategy
-        IExecutionStrategy GetExecutionStrategy();
+        IExecutionStrategy CreateExecutionStrategy();
+
     }
 }
