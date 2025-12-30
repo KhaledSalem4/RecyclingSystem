@@ -157,7 +157,6 @@ namespace PresentationLayer.Controllers
         /// <param name="id">Order ID</param>
         /// <returns>Success message</returns>
         [HttpPost("{id}/cancel")]
-        [Authorize(Policy = "AdminOnly")]
         [Authorize(Policy = "CollectorAccess")] 
         public async Task<IActionResult> CancelOrder(int id)
         {
