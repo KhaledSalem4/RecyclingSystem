@@ -21,6 +21,10 @@ namespace DataAccessLayer.Configurations
                    .HasConversion<string>()
                    .HasMaxLength(20);
 
+            builder.Property(o => o.Quantity)
+                .IsRequired()
+                .HasConversion<double>();
+           
             // User who placed the order
             builder.HasOne(o => o.User)
                    .WithMany(u => u.Orders)

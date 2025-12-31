@@ -16,6 +16,17 @@ namespace DataAccessLayer.Repositories.Impementations
         {
         }
 
+        // ✅ OVERRIDE GetAllAsync to include related entities
+        public override async Task<IEnumerable<Order>> GetAllAsync()
+        {
+            return await _dbSet
+                .Include(o => o.User)
+                .Include(o => o.Collector)
+                .Include(o => o.Factory)
+                .Include(o => o.Materials)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Order>> GetOrdersByUserIdAsync(string userId)
         {
             return await _dbSet
@@ -60,13 +71,14 @@ namespace DataAccessLayer.Repositories.Impementations
                 .ToListAsync();
         }
 
+        // ✅ FIX: Corrected GetOrderWithDetailsAsync
         public async Task<Order?> GetOrderWithDetailsAsync(int orderId)
         {
             return await _dbSet
-                .Include(o => o.User)
-                .Include(o => o.Collector)
-                .Include(o => o.Factory)
-                .Include(o => o.Materials) 
+                .Include(o => o.User)        // ✅ Fixed: Just include the entity
+                .Include(o => o.Collector)   // ✅ Fixed: Just include the entity
+                .Include(o => o.Factory)     // ✅ Fixed: Just include the entity
+                .Include(o => o.Materials)   // ✅ Fixed: Include materials collection
                 .FirstOrDefaultAsync(o => o.ID == orderId);
         }
     }
