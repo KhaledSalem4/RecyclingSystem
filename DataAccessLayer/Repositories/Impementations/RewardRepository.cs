@@ -91,8 +91,9 @@ namespace DataAccessLayer.Repositories.Impementations
         public async Task<Reward?> GetRewardForRedemptionAsync(int rewardId)
         {
             return await _dbSet
-                .FirstOrDefaultAsync(r => r.ID == rewardId && r.IsAvailable && r.StockQuantity > 0);
+                .FirstOrDefaultAsync(r => r.ID == rewardId);
         }
+
         // Added method to get rewards in a specific point range
         public async Task<IEnumerable<Reward>> GetRewardsInPointRangeAsync(int minPoints, int maxPoints)
         {
@@ -166,28 +167,28 @@ namespace DataAccessLayer.Repositories.Impementations
         }
 
         // Added method to delete a reward by ID
-        public async Task DeleteAsync(int id)
-        {
-            var reward = await _dbSet.FindAsync(id);
-            if (reward == null)
-                throw new KeyNotFoundException($"Reward with ID {id} not found");
+        //public async Task DeleteAsync(int id)
+        //{
+        //    var reward = await _dbSet.FindAsync(id);
+        //    if (reward == null)
+        //        throw new KeyNotFoundException($"Reward with ID {id} not found");
 
-            // Check if reward has been redeemed
-            var hasRedemptions = await _context.Set<HistoryReward>()
-                .AnyAsync(hr => hr.RewardId == id);
+        //    // Check if reward has been redeemed
+        //    var hasRedemptions = await _context.Set<HistoryReward>()
+        //        .AnyAsync(hr => hr.RewardId == id);
 
-            if (hasRedemptions)
-            {
-                // Soft delete: mark as unavailable instead of deleting
-                reward.IsAvailable = false;
-                _dbSet.Update(reward);
-            }
-            else
-            {
-                // Hard delete if no redemptions
-                _dbSet.Remove(reward);
-            }
-        }
+        //    if (hasRedemptions)
+        //    {
+        //        // Soft delete: mark as unavailable instead of deleting
+        //        reward.IsAvailable = false;
+        //        _dbSet.Update(reward);
+        //    }
+        //    else
+        //    {
+        //        // Hard delete if no redemptions
+        //        _dbSet.Remove(reward);
+        //    }
+        //}
 
         // Added method to update stock quantity for a reward
         public async Task<bool> UpdateStockQuantityAsync(int rewardId, int quantityChange)

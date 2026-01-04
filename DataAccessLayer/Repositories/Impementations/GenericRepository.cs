@@ -26,7 +26,8 @@ namespace DataAccessLayer.Repositories.Impementations
             return await _dbSet.FindAsync(id);
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        // ✅ ADD: virtual keyword to allow overriding
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
         }

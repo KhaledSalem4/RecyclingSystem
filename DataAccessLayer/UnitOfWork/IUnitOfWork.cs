@@ -1,4 +1,5 @@
 ﻿using DataAccessLayer.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,9 @@ namespace DataAccessLayer.UnitOfWork
         Task BeginTransactionAsync();
         Task CommitTransactionAsync();
         Task RollbackTransactionAsync();
-       
+        
+        // ✅ ADD: Get execution strategy
+        IExecutionStrategy CreateExecutionStrategy();
+
     }
 }

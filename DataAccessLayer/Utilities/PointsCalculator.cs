@@ -9,7 +9,8 @@ namespace DataAccessLayer.Utilities
         {
             { MaterialType.Plastic, 5 },
             { MaterialType.Can, 10 },
-            { MaterialType.Cartoon, 8 }
+            { MaterialType.Carton, 8 },
+            { MaterialType.Glass, 7 }
         };
 
         /// <summary>
@@ -54,14 +55,14 @@ namespace DataAccessLayer.Utilities
         }
 
         /// <summary>
-        /// Calculates total points for an order
+        /// Calculates total points for an order (NEW SYSTEM)
         /// </summary>
         public static int CalculateOrderPoints(Order order)
         {
-            if (order?.Materials == null || !order.Materials.Any())
+            if (order == null)
                 return 0;
 
-            return CalculateTotalPoints(order.Materials);
+            return CalculatePoints(order.TypeOfMaterial, order.Quantity);
         }
     }
 }

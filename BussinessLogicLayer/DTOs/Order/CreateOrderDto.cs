@@ -1,3 +1,4 @@
+using DataAccessLayer.Entities;
 using System.ComponentModel.DataAnnotations;
 
 namespace BussinessLogicLayer.DTOs.Order
@@ -9,7 +10,7 @@ namespace BussinessLogicLayer.DTOs.Order
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Type of material is required")]
-        public string TypeOfMaterial { get; set; } = string.Empty;
+        public MaterialType TypeOfMaterial { get; set; }
 
         [Required(ErrorMessage = "Quantity is required")]
         [Range(2, int.MaxValue, ErrorMessage = "Quantity must be at least 2 kg")]

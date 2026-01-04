@@ -44,7 +44,7 @@ namespace RecyclingSystem.DataAccess.Configurations
             builder.HasMany(r => r.HistoryRewards)
                    .WithOne(hr => hr.Reward)
                    .HasForeignKey(hr => hr.RewardId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

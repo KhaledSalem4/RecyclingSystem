@@ -69,18 +69,12 @@ namespace PresentationLayer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateOrderDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
         {
-            try
-            {
-                var createdOrder = await _orderService.AddAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = createdOrder.ID }, createdOrder);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var createdOrder = await _orderService.AddAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = createdOrder.ID }, createdOrder);
         }
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, OrderDto dto)
@@ -124,14 +118,28 @@ namespace PresentationLayer.Controllers
         /// </summary>
         /// <param name="id">Order ID</param>
         /// <returns>Success message with total poi nts awarded</returns>
+       
+        // In OrderController.cs CompleteOrder endpoint
         [HttpPost("{id}/complete")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> CompleteOrder(int id)
         {
             try
             {
+                // Get order details first to calculate points
+                var order = await _orderService.GetByIdAsync(id);
+                if (order == null)
+                    return NotFound(new { error = "Order not found" });
+
                 var result = await _orderService.CompleteOrderAsync(id);
-                return Ok(new { success = result, message = "Order completed and points awarded" });
+
+                // Return points info
+                return Ok(new
+                {
+                    success = result,
+                    message = "Order completed and points awarded",
+                    pointsAwarded = "Check updated user points" // You can enhance this
+                });
             }
             catch (KeyNotFoundException ex)
             {
@@ -149,7 +157,7 @@ namespace PresentationLayer.Controllers
         /// <param name="id">Order ID</param>
         /// <returns>Success message</returns>
         [HttpPost("{id}/cancel")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "CollectorAccess")] 
         public async Task<IActionResult> CancelOrder(int id)
         {
             try

@@ -1,0 +1,23 @@
+[1mdiff --git a/DataAccessLayer/Entities/MaterialType.cs b/DataAccessLayer/Entities/MaterialType.cs[m
+[1mindex 8a95397..513d7a6 100644[m
+[1m--- a/DataAccessLayer/Entities/MaterialType.cs[m
+[1m+++ b/DataAccessLayer/Entities/MaterialType.cs[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-﻿using System;[m
+[32m+[m[32m﻿    using System;[m
+ using System.Collections.Generic;[m
+ using System.Linq;[m
+ using System.Text;[m
+[36m@@ -8,9 +8,10 @@[m [mnamespace DataAccessLayer.Entities[m
+ {[m
+     public enum MaterialType[m
+     {[m
+[31m-        Plastic,[m
+[31m-        Cartoon,[m
+[32m+[m[32m        Plastic,[m[41m    [m
+         Can,[m
+[32m+[m[32m        Carton,[m
+[32m+[m
+         Glass[m
+     }[m
+ }[m

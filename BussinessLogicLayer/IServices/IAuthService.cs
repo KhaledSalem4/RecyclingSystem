@@ -1,4 +1,5 @@
 ﻿using BussinessLogicLayer.DTOs.AppUser;
+using DataAccessLayer.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 
@@ -9,6 +10,7 @@ namespace BusinessLogicLayer.IServices
         Task<IdentityResult> RegisterAsync(RegisterUserDto dto, string role);
         Task<string> LoginAndGenerateTokenAsync(LoginUserDto dto);
         Task<IdentityResult> ConfirmEmailAsync(string email, string token);
+        Task<ApplicationUser?> GetUserByEmailAsync(string email);
         Task<bool> SendPasswordResetLinkAsync(ForgotPasswordDto dto);
         Task<IdentityResult> ResetPasswordAsync(ResetPasswordDto dto);
     }

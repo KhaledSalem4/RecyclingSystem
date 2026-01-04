@@ -47,10 +47,18 @@ namespace BusinessLogicLayer.Mappers
                 .ForMember(dest => dest.Points, opt => opt.Ignore());
 
             // Reward mappings
-            CreateMap<Reward, RewardDto>().ReverseMap();
-            CreateMap<Reward, CreateRewardDto>().ReverseMap();
-            CreateMap<Reward, UpdateRewardDto>().ReverseMap();
+            // Reward mappings
+            CreateMap<Reward, RewardDto>();
+
+            CreateMap<CreateRewardDto, Reward>()
+                .ForMember(dest => dest.IsAvailable, opt => opt.MapFrom(src => src.StockQuantity > 0));
+
+            CreateMap<UpdateRewardDto, Reward>()
+                .ForMember(dest => dest.IsAvailable, opt => opt.MapFrom(src => src.StockQuantity > 0));
+
+            CreateMap<Reward, UpdateRewardDto>();
             CreateMap<Reward, RewardWithStatsDto>();
+
         }
     }
 }

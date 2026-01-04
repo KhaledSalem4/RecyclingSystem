@@ -21,6 +21,10 @@ namespace DataAccessLayer.Configurations
                    .HasConversion<string>()
                    .HasMaxLength(20);
 
+            builder.Property(o => o.Quantity)
+                .IsRequired()
+                .HasConversion<double>();
+           
             // User who placed the order
             builder.HasOne(o => o.User)
                    .WithMany(u => u.Orders)
@@ -39,13 +43,10 @@ namespace DataAccessLayer.Configurations
                    .HasForeignKey(o => o.FactoryId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            // Many-to-Many relationship with Materials
-            builder.HasMany(o => o.Materials)
-                   .WithMany(m => m.Orders)
-                   .UsingEntity<Dictionary<string, object>>(
-                        "OrderMaterial",
-                        j => j.HasOne<Material>().WithMany().HasForeignKey("MaterialId"),
-                        j => j.HasOne<Order>().WithMany().HasForeignKey("OrderId"));
+            builder.Property(o => o.TypeOfMaterial)
+                   .HasConversion<string>()
+                   .IsRequired();
+
         }
     }
 }

@@ -3,6 +3,7 @@ using BusinessLogicLayer.IServices;
 using BussinessLogicLayer.DTOs.Reward;
 using DataAccessLayer.Entities;
 using DataAccessLayer.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 using RecyclingSystem.DataAccess.Entities;
 
 namespace BusinessLogicLayer.Services
@@ -24,6 +25,7 @@ namespace BusinessLogicLayer.Services
             var rewards = await _unitOfWork.Rewards.GetAllAsync();
             return _mapper.Map<IEnumerable<RewardDto>>(rewards);
         }
+
 
         public async Task<RewardDto?> GetByIdAsync(int id)
         {
@@ -65,10 +67,15 @@ namespace BusinessLogicLayer.Services
 
         public async Task<bool> DeleteAsync(int id)
         {
-            await _unitOfWork.Rewards.DeleteAsync(id);
+            var reward = await _unitOfWork.Rewards.GetByIdAsync(id);
+            if (reward == null)
+                return false;
+
+            _unitOfWork.Rewards.Remove(reward); // ❗ مهم
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
+
 
         // User-facing Features
         public async Task<IEnumerable<RewardDto>> GetAvailableRewardsForUserAsync(string userId)
@@ -122,60 +129,61 @@ namespace BusinessLogicLayer.Services
         // Redemption Logic
         public async Task<bool> RedeemRewardAsync(string userId, RedeemRewardDto dto)
         {
-            try
+            var strategy = _unitOfWork.CreateExecutionStrategy();
+
+            return await strategy.ExecuteAsync(async () =>
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // Get user with points
-                var user = await _unitOfWork.Users.GetByIdAsync(userId);
-                if (user == null)
-                    throw new KeyNotFoundException("User not found");
-
-                // Get reward
-                var reward = await _unitOfWork.Rewards.GetRewardForRedemptionAsync(dto.RewardId);
-                if (reward == null)
-                    throw new InvalidOperationException("Reward is not available");
-
-                // Validate stock
-                if (reward.StockQuantity < dto.Quantity)
-                    throw new InvalidOperationException("Insufficient stock");
-
-                // Calculate points
-                int totalPointsNeeded = reward.RequiredPoints * dto.Quantity;
-
-                // Validate user points
-                if (user.Points < totalPointsNeeded)
-                    throw new InvalidOperationException("Insufficient points");
-
-                // ✅ Deduct points from user
-                user.Points -= totalPointsNeeded;
-                _unitOfWork.Users.Update(user);
-
-                // Deduct stock
-                await _unitOfWork.Rewards.UpdateStockQuantityAsync(dto.RewardId, -dto.Quantity);
-
-                // Create redemption history
-                var historyReward = new HistoryReward
+                try
                 {
-                    UserId = userId,
-                    RewardId = dto.RewardId,
-                    PointsUsed = totalPointsNeeded,
-                    Quantity = dto.Quantity,
-                    RedeemedAt = DateTime.UtcNow,
-                    Status = RedemptionStatus.Pending
-                };
+                    var user = await _unitOfWork.Users.GetByIdAsync(userId)
+                               ?? throw new Exception("User not found");
 
-                await _unitOfWork.HistoryRewards.AddAsync(historyReward);
+                    var reward = await _unitOfWork.Rewards
+                        .GetRewardForRedemptionAsync(dto.RewardId)
+                        ?? throw new Exception("Reward not available");
 
-                await _unitOfWork.CommitTransactionAsync();
-                return true;
-            }
-            catch
-            {
-                await _unitOfWork.RollbackTransactionAsync();
-                throw;
-            }
+                    if (reward.StockQuantity < dto.Quantity)
+                        throw new Exception("Insufficient stock");
+
+                    int totalPoints = reward.RequiredPoints * dto.Quantity;
+
+                    if (user.Points < totalPoints)
+                        throw new Exception("Insufficient points");
+
+                    // ✅ خصم النقاط
+                    user.Points -= totalPoints;
+                    _unitOfWork.Users.Update(user);
+
+                    // ✅ خصم الستوك
+                    await _unitOfWork.Rewards
+                        .UpdateStockQuantityAsync(dto.RewardId, -dto.Quantity);
+
+                    await _unitOfWork.HistoryRewards.AddAsync(new HistoryReward
+                    {
+                        UserId = userId,
+                        RewardId = dto.RewardId,
+                        Quantity = dto.Quantity,
+                        PointsUsed = totalPoints,
+                        RedeemedAt = DateTime.UtcNow,
+                        Status = RedemptionStatus.Pending
+                    });
+
+                    await _unitOfWork.CommitTransactionAsync();
+                    return true;
+                }
+                catch
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    throw;
+                }
+            });
         }
+
+
+
+
 
         // Admin Features
         public async Task<IEnumerable<RewardDto>> GetLowStockRewardsAsync(int threshold = 10)

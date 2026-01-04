@@ -26,7 +26,7 @@ namespace DataAccessLayer.Repositories.Interfaces
         // Command methods
         Task AddRewardAsync(Reward reward);
         Task UpdateAsync(Reward reward);
-        Task DeleteAsync(int id);
+        //Task DeleteAsync(int id);
         Task<bool> UpdateStockQuantityAsync(int rewardId, int quantityChange);
 
         Task<bool> RewardExistsByNameAsync(string name, int? excludeId = null);

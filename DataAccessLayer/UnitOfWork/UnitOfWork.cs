@@ -1,8 +1,8 @@
 ﻿using DataAccessLayer.Context;
 using DataAccessLayer.Repositories.Impementations;
 using DataAccessLayer.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-
 
 namespace DataAccessLayer.UnitOfWork
 {
@@ -36,8 +36,12 @@ namespace DataAccessLayer.UnitOfWork
 
         public async Task BeginTransactionAsync()
         {
+            if (_transaction != null)
+                return;
+
             _transaction = await _context.Database.BeginTransactionAsync();
         }
+
 
         public async Task CommitTransactionAsync()
         {
@@ -45,9 +49,7 @@ namespace DataAccessLayer.UnitOfWork
             {
                 await SaveChangesAsync();
                 if (_transaction != null)
-                {
                     await _transaction.CommitAsync();
-                }
             }
             catch
             {
@@ -64,6 +66,7 @@ namespace DataAccessLayer.UnitOfWork
             }
         }
 
+
         public async Task RollbackTransactionAsync()
         {
             if (_transaction != null)
@@ -74,10 +77,20 @@ namespace DataAccessLayer.UnitOfWork
             }
         }
 
+
         public void Dispose()
         {
             _transaction?.Dispose();
             _context.Dispose();
         }
+
+        public IExecutionStrategy CreateExecutionStrategy()
+        {
+            return _context.Database.CreateExecutionStrategy();
+        }
+
+        public RecyclingDbContext DbContext => _context;
+
+
     }
 }

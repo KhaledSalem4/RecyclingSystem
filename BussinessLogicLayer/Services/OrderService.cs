@@ -1,4 +1,4 @@
-using BusinessLogicLayer.IServices;
+﻿using BusinessLogicLayer.IServices;
 using BussinessLogicLayer.DTOs.Order;
 using DataAccessLayer.Entities;
 using DataAccessLayer.UnitOfWork;
@@ -26,8 +26,14 @@ namespace BusinessLogicLayer.Services
                 UserId = entity.UserId,
                 CollectorId = entity.CollectorId,
                 FactoryId = entity.FactoryId,
-                UserName = entity.User?.UserName,
-                CollectorName = entity.Collector?.UserName,
+                
+                // Material type and quantity mapping
+                TypeOfMaterial = entity.TypeOfMaterial.ToString(),
+                Quantity = entity.Quantity,
+                
+                // ✅ FIX: Use FullName first, then UserName, then Email as fallback
+                UserName = entity.User?.FullName ?? entity.User?.UserName ?? entity.User?.Email,
+                CollectorName = entity.Collector?.FullName ?? entity.Collector?.UserName ?? entity.Collector?.Email,
                 FactoryName = entity.Factory?.Name,
                 
                 // Pickup Address (from Order itself)
@@ -118,54 +124,47 @@ namespace BusinessLogicLayer.Services
 
         public async Task<OrderDto> AddAsync(CreateOrderDto dto)
         {
-            // Find user by email using the Users repository
+            // 1️⃣ Find user by email
             var allUsers = await _unitOfWork.Users.GetAllAsync();
             var appUser = allUsers.FirstOrDefault(u => u.Email == dto.Email);
+
             if (appUser == null)
                 throw new KeyNotFoundException($"User with email {dto.Email} not found.");
 
-            // Update user address if not already set
+            // 2️⃣ Update user address if not already set
             if (string.IsNullOrEmpty(appUser.City) && !string.IsNullOrEmpty(dto.City))
             {
                 appUser.City = dto.City;
                 appUser.Street = dto.Street;
                 appUser.BuildingNo = dto.BuildingNo;
                 appUser.Apartment = dto.Apartment;
+
                 _unitOfWork.Users.Update(appUser);
             }
 
-            // Parse material type
-            if (!Enum.TryParse<MaterialType>(dto.TypeOfMaterial, ignoreCase: true, out var materialType))
-                throw new ArgumentException($"Invalid material type: {dto.TypeOfMaterial}");
-
-            // Always create NEW material instance for each order
-            var material = new Material
-            {
-                TypeName = materialType.ToString(),
-                Size = dto.Quantity,
-                Price = 0 // Price can be calculated based on business logic
-            };
-            await _unitOfWork.Materials.AddAsync(material);
-
-            // Find factory (TODO: improve selection logic based on city/capacity)
+            // 3️⃣ Find factory
             var factories = await _unitOfWork.Factories.GetAllAsync();
             var factory = factories.FirstOrDefault();
+
             if (factory == null)
                 throw new InvalidOperationException("No factory available.");
 
-            // Create order entity with pickup address
+            // 4️⃣ Create order
             var order = new Order
             {
-                OrderDate = DateOnly.FromDateTime(DateTime.Now),
+                OrderDate = DateTime.Now, // ✅ Changed from DateOnly to DateTime
                 Status = OrderStatus.Pending,
+
                 UserId = appUser.Id,
                 FactoryId = factory.ID,
-                // Pickup address from DTO
+
                 City = dto.City,
                 Street = dto.Street,
                 BuildingNo = dto.BuildingNo,
                 Apartment = dto.Apartment,
-                Materials = new List<Material> { material }
+
+                TypeOfMaterial = dto.TypeOfMaterial,
+                Quantity = dto.Quantity
             };
 
             await _unitOfWork.Orders.AddAsync(order);
@@ -174,6 +173,8 @@ namespace BusinessLogicLayer.Services
             var createdOrder = await _unitOfWork.Orders.GetOrderWithDetailsAsync(order.ID);
             return ToDto(createdOrder!);
         }
+
+
 
         public async Task UpdateAsync(OrderDto dto)
         {
@@ -198,41 +199,36 @@ namespace BusinessLogicLayer.Services
 
         public async Task<bool> CompleteOrderAsync(int orderId)
         {
-            try
-            {
-                await _unitOfWork.BeginTransactionAsync();
+            var order = await _unitOfWork.Orders.GetOrderWithDetailsAsync(orderId);
 
-                var order = await _unitOfWork.Orders.GetOrderWithDetailsAsync(orderId);
+            if (order == null)
+                throw new KeyNotFoundException($"Order with ID {orderId} not found.");
 
-                if (order == null)
-                    throw new KeyNotFoundException($"Order with ID {orderId} not found.");
+            if (order.Status != OrderStatus.Delivered)
+                throw new InvalidOperationException("Only delivered orders can be completed.");
 
-                if (order.Status != OrderStatus.Delivered)
-                    throw new InvalidOperationException("Only delivered orders can be completed.");
+            if (order.User == null)
+                throw new InvalidOperationException("Order has no associated user.");
 
-                if (order.User == null)
-                    throw new InvalidOperationException("Order has no associated user.");
+            // 1️⃣ Calculate points
+            int pointsEarned = PointsCalculator.CalculateOrderPoints(order);
 
-                // Calculate points from materials
-                int pointsEarned = PointsCalculator.CalculateOrderPoints(order);
+            // 2️⃣ Award points to user
+            order.User.Points += pointsEarned;
+            
+            // ✅ FIX: Explicitly update user to track points change
+            _unitOfWork.Users.Update(order.User);
 
-                // Award points to user
-                order.User.Points += pointsEarned;
+            // 3️⃣ Update order status
+            order.Status = OrderStatus.Completed;
+            _unitOfWork.Orders.Update(order);
 
-                // Update order status
-                order.Status = OrderStatus.Completed;
+            // 4️⃣ Save both User and Order changes (atomic)
+            await _unitOfWork.SaveChangesAsync();
 
-                _unitOfWork.Orders.Update(order);
-                await _unitOfWork.CommitTransactionAsync();
-
-                return true;
-            }
-            catch
-            {
-                await _unitOfWork.RollbackTransactionAsync();
-                throw;
-            }
+            return true;
         }
+
 
         public async Task<bool> CancelOrderAsync(int orderId)
         {
