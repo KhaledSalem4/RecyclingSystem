@@ -82,11 +82,19 @@ namespace BusinessLogicLayer.Services
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-            // 🔗 رابط Angular بدل API
-            var frontEndUrl = _config["AppSettings:FrontEndUrl"] ?? "http://localhost:4200";
-            var backendUrl = _config["AppSettings:BackendUrl"] ?? "https://localhost:7139";
-            var confirmationLink =
-                $"{frontEndUrl}/confirm-email?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
+            // ✅ Get frontend URL with validation
+            var frontEndUrl = _config["AppSettings:FrontEndUrl"];
+            
+            if (string.IsNullOrEmpty(frontEndUrl))
+            {
+                Console.WriteLine("⚠️ WARNING: FrontEndUrl not configured, using default localhost");
+                frontEndUrl = "http://localhost:4200";
+            }
+            
+            Console.WriteLine($"✅ Using Frontend URL: {frontEndUrl}");
+            
+            var confirmationLink = $"{frontEndUrl}/confirm-email?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
+            
             var emailBody = $@"
 <!DOCTYPE html>
 <html>
@@ -99,7 +107,6 @@ namespace BusinessLogicLayer.Services
     <table align='center' width='100%' cellpadding='0' cellspacing='0' style='max-width:600px; background:white; border-radius:10px; margin-top:40px; box-shadow:0 4px 8px rgba(0,0,0,0.1);'>
         <tr>
             <td style='background:#0bb56b; padding:20px; text-align:center; border-radius:10px 10px 0 0;'>
-                <img src='{backendUrl}/images/logo.png' alt='GreenZone Logo' style='width:120px; height:auto;' />
                 <h1 style='color:white; margin:10px 0 0 0; font-size:24px;'>GreenZone</h1>
                 <p style='color:#e8f5e9; margin:5px 0 0 0; font-size:13px;'>ZERO WASTE • Recycle. Renew. Repair</p>
             </td>
@@ -227,9 +234,19 @@ namespace BusinessLogicLayer.Services
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            var frontEndUrl = _config["AppSettings:FrontEndUrl"] ?? "http://localhost:4200";
-            var resetLink =
-                $"{frontEndUrl}/reset-password?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
+            // ✅ Get frontend URL with validation
+            var frontEndUrl = _config["AppSettings:FrontEndUrl"];
+            
+            if (string.IsNullOrEmpty(frontEndUrl))
+            {
+                Console.WriteLine("⚠️ WARNING: FrontEndUrl not configured, using default localhost");
+                frontEndUrl = "http://localhost:4200";
+            }
+            
+            Console.WriteLine($"✅ Password reset link using Frontend URL: {frontEndUrl}");
+            
+            var resetLink = $"{frontEndUrl}/reset-password?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
+            
             var emailBody = $@"
 <body style='margin:0; padding:0; background:#f6f6f6; font-family:Arial, sans-serif;'>
 
